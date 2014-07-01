@@ -7,7 +7,13 @@
     "scripts": ["background.js"]
   },
   "browser_action": {
+    "name": "Google Calendar Daylight",
+    "icons": ["icon.png"],
     "default_icon": "icon.png"
   },
+  "content_scripts": [{
+    "js": ["jquery-1.11.0.min.js", "background.js", "daylight.js"],
+    "matches": ["http://*/*", "https://*/*"]
+    }],
   "permissions": [ "tabs", "https://www.google.com/" ]
 }

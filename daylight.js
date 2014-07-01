@@ -46,13 +46,11 @@
 
 
     setInterval(function() { 
-		var table = $('#tgTable')
-		var tableSize = table.children[0].children.length
-		var days = table.children[0].children[tableSize - 1].children
+		var days = $('#tgTable').children().children().last().children();
 		
 		if ($('#daylight') === null) {
 			for (i = 1; i <= 7; i++) {
-				days[i].insertBefore( makeHighlighter(550, 2100), days[i].firstChild )
+				days[i].insertBefore( makeHighlighter(550, 2100), days[i].firstChild );
 			}
 		}
     }, 100);
