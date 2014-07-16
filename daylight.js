@@ -47,17 +47,17 @@
 		return Math.floor(theTime / maxTime * maxPixels);
 	};
 
-
+	console.log('Google Calendar Daylight loaded')
     setInterval(function() { 
     	// Don't execute if jQuery is absent for some weird reason
     	if (typeof jQuery !== 'undefined') {  
 
 			// Get the displayed year
-			var year = $('.date-picker-off .date-top').childNodes[0]
-			year = year.substringData(year.length-4, year.length)
+			var year = $('.date-picker-off .date-top').text()
+			year = year.substring(year.length-4, year.length)
 
 			// Get the "days" columns
-			var days = $('#tgTable tbody').children[1].children;
+			var days = $('#tgTable tbody').children().last().children();
 			
 			// Get the date for each day column
 
