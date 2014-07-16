@@ -1,10 +1,8 @@
 (function() {
 	var id = 'npmpegpegakgefmfoilnppbcaiejkcmp';
 	
-	var SunCalc = require('./suncalc'),
-    	t = require('tape');
-
-    var jQuery = require('jquery.min.js');
+    var lat = 37.544459;
+    var lon = -122.308042;
 
 	var makeHighlighter = function(fromTime, toTime) {
 		var daylightNode = document.createElement('div')
@@ -51,15 +49,36 @@
 
 
     setInterval(function() { 
-		var days = $('#tgTable').children().children().last().children();
-		
-		if ($('#daylight') === null) {
-			for (i = 1; i <= 7; i++) {
-				days[i].insertBefore( makeHighlighter(550, 2100), days[i].firstChild );
-			}
-		}
-    }, 100);
-})();
+    	// Don't execute if jQuery is absent for some weird reason
+    	if (typeof jQuery !== 'undefined') {  
 
+			// Get the displayed year
+			var year = $('.date-picker-off .date-top').childNodes[0]
+			year = year.substringData(year.length-4, year.length)
+
+			// Get the "days" columns
+			var days = $('#tgTable tbody').children[1].children;
+			
+			// Get the date for each day column
+
+
+
+			// 
+			if ($('#daylight') === null) {
+				for (i = 1; i <= days.length - 1; i++) {
+					var currDate = new Date( );
+					var sunstuff = SunCalc.getTimes(currDate, lat, lon);
+
+					days[i].insertBefore( 
+						makeHighlighter(sunstuff.sunrise.getHours() * 100 + sunstuff.sunrise.getMinutes(), 
+										sunstuff.sunset.getHours()  * 100 + sunstuff.sunset.getMinutes()),
+						days[i].firstChild );
+				}
+			}
+
+    	} 
+    }, 500);
+
+})();
 
 
