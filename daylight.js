@@ -1,5 +1,10 @@
 (function() {
 	var id = 'npmpegpegakgefmfoilnppbcaiejkcmp';
+	
+	var SunCalc = require('./suncalc'),
+    	t = require('tape');
+
+    var jQuery = require('jquery.min.js');
 
 	var makeHighlighter = function(fromTime, toTime) {
 		var daylightNode = document.createElement('div')
