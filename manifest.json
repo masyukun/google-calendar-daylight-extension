@@ -1,6 +1,6 @@
 {
   "name": "Google Calendar Daylight",
-  "version": "1.0.5",
+  "version": "1.0.7",
   "manifest_version": 2,
   "description": "Modifies Google Calendar to visualize daylight hours in your timezone.",
   "background": {
@@ -14,8 +14,12 @@
     "default_title": "Google Calendar Daylight"
   },
   "content_scripts": [{
-    "js": ["jquery.min.js", "background.js", "daylight.js", "suncalc/suncalc.js"],
-    "matches": ["http://*.google.com/calendar*", "https://*.google.com/calendar*"]
+    "js": ["background.js", "daylight.js", "suncalc/suncalc.js"],
+    "matches": [
+      "http://google.com/calendar/*", 
+      "http://*.google.com/calendar/*", 
+      "https://*.google.com/calendar/*"
+    ]
     }],
   "permissions": [ "tabs", "https://www.google.com/calendar" ]
 }
