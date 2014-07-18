@@ -1,6 +1,8 @@
 (function() {
 	var id = 'npmpegpegakgefmfoilnppbcaiejkcmp';
 	
+	var idcount = 1;
+
     var lat = 37.544459;
     var lon = -122.308042;
 
@@ -9,9 +11,9 @@
 
 		// Create parent node
 		var att1 = document.createAttribute("id");
-		att1.value = "daylight";
+		att1.value = "daylight" + idcount++;
 		var att2 = document.createAttribute("class");
-		att2.value = "tg-col-overlaywrapper";
+		att2.value = "daylight tg-col-overlaywrapper";
 		daylightNode.setAttributeNode(att1);
 		daylightNode.setAttributeNode(att2);
 
@@ -24,7 +26,7 @@
 		var att5 = document.createAttribute("style");
 		att5.value = "top: " + timeToPixels(fromTime) + "px; ";
 		att5.value += "height: " + (timeToPixels(toTime) - timeToPixels(fromTime)) + "px; ";
-		att5.value += "border-top: 1px solid #DD0; border-bottom: 1px solid #DD0; background-color: #FF0; ";
+		att5.value += "border-top: 1px solid #DD0; border-bottom: 1px solid #DD0; background-color: #FFFFCC; ";
 		highlighter.setAttributeNode(att3);
 		highlighter.setAttributeNode(att4);
 		highlighter.setAttributeNode(att5);
@@ -33,7 +35,6 @@
 		return daylightNode;
 	};
 
-	// TODO: Use the JavaScript time type
 	/** theTime should be in 24 hour format: 0000 to 2399 */
 	var timeToPixels = function(theTime) {
 		var maxPixels = 1008;
@@ -49,8 +50,10 @@
 
 	console.log('Google Calendar Daylight loaded')
     setInterval(function() { 
+
+
     	// Don't execute if jQuery is absent for some weird reason
-    	if (typeof jQuery !== 'undefined') {  
+    	if (window.jQuery) {
 
 			// Get the displayed year
 			var year = $('.date-picker-off .date-top').text()
@@ -60,23 +63,30 @@
 			var days = $('#tgTable tbody').children().last().children();
 			
 			// Get the date for each day column
+			var dates = $('tr.wk-daynames').children();
+			
 
-
-
-			// 
-			if ($('#daylight') === null) {
+			// Add the daylight highlighters
+			var alreadypainted = $('div .daylight');
+			if ( alreadypainted.length < 7 ) {
 				for (i = 1; i <= days.length - 1; i++) {
-					var currDate = new Date( );
-					var sunstuff = SunCalc.getTimes(currDate, lat, lon);
+					var date = $(dates[i]).attr("title");
+					date = date.substring(4, date.length);
+					date = date.split('/');
+					var month = date[0];
+					var day = date[1];
 
+					var currDate = new Date( year, month, day, 0, 0, 0, 0);
+					var sunstuff = SunCalc.getTimes(currDate, lat, lon);
+					var sunrise = sunstuff.sunrise.getHours() * 100 + sunstuff.sunrise.getMinutes();
+					var sunset = sunstuff.sunset.getHours()  * 100 + sunstuff.sunset.getMinutes();
+					
 					days[i].insertBefore( 
-						makeHighlighter(sunstuff.sunrise.getHours() * 100 + sunstuff.sunrise.getMinutes(), 
-										sunstuff.sunset.getHours()  * 100 + sunstuff.sunset.getMinutes()),
+						makeHighlighter(sunrise, sunset),
 						days[i].firstChild );
 				}
 			}
-
-    	} 
+    	}
     }, 500);
 
 })();
