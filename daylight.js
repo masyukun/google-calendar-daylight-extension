@@ -1,12 +1,16 @@
 (function() {
 	var id = 'npmpegpegakgefmfoilnppbcaiejkcmp';
 	
+	// Used for HTML ID generation. Gotta be unique, right?
 	var idcount = 1;
 
+	// Attach these to the window, where I can reach them.
     window.lat = 0.0;
     window.lon = 0.0;
 
+    // Let the user play with this at some point
     var daylightColor = '#FFFFCC';
+
 
 	var makeHighlighter = function(fromTime, toTime) {
 		var daylightNode = document.createElement('div')
@@ -19,8 +23,8 @@
 		daylightNode.setAttributeNode(att1);
 		daylightNode.setAttributeNode(att2);
 
-		// Create child highlighter node
-		var highlighter = document.createElement('div')
+		// Create child daylightHighlighter node
+		var daylightHighlighter = document.createElement('div')
 		var att3 = document.createAttribute("id");
 		att3.value = "tgnowmarker";
 		var att4 = document.createAttribute("class");
@@ -29,11 +33,11 @@
 		att5.value = "top: " + timeToPixels(fromTime) + "px; ";
 		att5.value += "height: " + (timeToPixels(toTime) - timeToPixels(fromTime)) + "px; ";
 		att5.value += "border-top: 1px solid #DD0; border-bottom: 1px solid #DD0; background-color: "+daylightColor+"; opacity: 0.5 ";
-		highlighter.setAttributeNode(att3);
-		highlighter.setAttributeNode(att4);
-		highlighter.setAttributeNode(att5);
+		daylightHighlighter.setAttributeNode(att3);
+		daylightHighlighter.setAttributeNode(att4);
+		daylightHighlighter.setAttributeNode(att5);
 
-		daylightNode.appendChild( highlighter );
+		daylightNode.appendChild( daylightHighlighter );
 		return daylightNode;
 	};
 
