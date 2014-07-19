@@ -6,6 +6,8 @@
     window.lat = 0.0;
     window.lon = 0.0;
 
+    var daylightColor = '#FFFFCC';
+
 	var makeHighlighter = function(fromTime, toTime) {
 		var daylightNode = document.createElement('div')
 
@@ -26,7 +28,7 @@
 		var att5 = document.createAttribute("style");
 		att5.value = "top: " + timeToPixels(fromTime) + "px; ";
 		att5.value += "height: " + (timeToPixels(toTime) - timeToPixels(fromTime)) + "px; ";
-		att5.value += "border-top: 1px solid #DD0; border-bottom: 1px solid #DD0; background-color: #FFFFCC; ";
+		att5.value += "border-top: 1px solid #DD0; border-bottom: 1px solid #DD0; background-color: "+daylightColor+"; opacity: 0.5 ";
 		highlighter.setAttributeNode(att3);
 		highlighter.setAttributeNode(att4);
 		highlighter.setAttributeNode(att5);
@@ -45,6 +47,9 @@
 			theTime = 0;
 		}
 
+		// Normalize minutes
+		theTime = Math.floor((theTime - Math.floor(theTime/100) * 100) / 60 * 100) + (Math.floor(theTime /100) * 100)
+
 		return Math.floor(theTime / maxTime * maxPixels);
 	};
 
@@ -54,9 +59,6 @@
 	{
 		window.lat=position.coords.latitude;
 		window.lon=position.coords.longitude;
-
-		console.log('lat = ' + window.lat);
-		console.log('lon = ' + window.lon);
 	};
 
 	function errorHandler(error)
@@ -123,7 +125,7 @@
 					var sunstuff = SunCalc.getTimes(currDate, window.lat, window.lon);
 					var sunrise = sunstuff.sunrise.getHours() * 100 + sunstuff.sunrise.getMinutes();
 					var sunset = sunstuff.sunset.getHours()  * 100 + sunstuff.sunset.getMinutes();
-					
+
 					days[i].insertBefore( 
 						makeHighlighter(sunrise, sunset),
 						days[i].firstChild );
