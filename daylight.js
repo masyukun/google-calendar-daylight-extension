@@ -3,8 +3,8 @@
 	
 	var idcount = 1;
 
-    var lat = 37.544459;
-    var lon = -122.308042;
+    window.lat = 0.0;
+    window.lon = 0.0;
 
 	var makeHighlighter = function(fromTime, toTime) {
 		var daylightNode = document.createElement('div')
@@ -48,6 +48,50 @@
 		return Math.floor(theTime / maxTime * maxPixels);
 	};
 
+
+
+	function showPosition(position)
+	{
+		window.lat=position.coords.latitude;
+		window.lon=position.coords.longitude;
+
+		console.log('lat = ' + window.lat);
+		console.log('lon = ' + window.lon);
+	};
+
+	function errorHandler(error)
+	{
+		switch(error.code)
+		{
+			case error.PERMISSION_DENIED:
+				console.log("Could not get position as permission was denied.");
+				break;
+
+			case error.POSITION_UNAVAILABLE:
+				console.log("Could not get position as this information is not available at this time.");
+				break;
+
+			case error.TIMEOUT:
+				console.log("Attempt to get position timed out.");
+				break;
+
+			default:
+				console.log("Sorry, an error occurred. Code: "+error.code+" Message: "+error.message);
+				break;
+		}
+	};
+
+	if(navigator.geolocation)
+	{
+		navigator.geolocation.getCurrentPosition(showPosition,errorHandler);
+	}
+	else
+	{
+		console.log("Sorry, your browser does not support geolocation services.");
+	}
+
+
+
 	console.log('Google Calendar Daylight loaded')
     setInterval(function() { 
 
@@ -65,10 +109,9 @@
 			// Get the date for each day column
 			var dates = $('tr.wk-daynames').children();
 			
-
 			// Add the daylight highlighters
 			var alreadypainted = $('div .daylight');
-			if ( alreadypainted.length < 7 ) {
+			if ( alreadypainted.length < 7 && window.lat != 0 && window.lon != 0) {
 				for (i = 1; i <= days.length - 1; i++) {
 					var date = $(dates[i]).attr("title");
 					date = date.substring(4, date.length);
@@ -77,7 +120,7 @@
 					var day = date[1];
 
 					var currDate = new Date( year, month, day, 0, 0, 0, 0);
-					var sunstuff = SunCalc.getTimes(currDate, lat, lon);
+					var sunstuff = SunCalc.getTimes(currDate, window.lat, window.lon);
 					var sunrise = sunstuff.sunrise.getHours() * 100 + sunstuff.sunrise.getMinutes();
 					var sunset = sunstuff.sunset.getHours()  * 100 + sunstuff.sunset.getMinutes();
 					
