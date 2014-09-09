@@ -1,6 +1,6 @@
-(function() {
+(function () {
 	var id = 'iekoigdlnhmafemfoamlnmhihmcfcklk';
-	
+
 	// Used for HTML ID generation. Gotta be unique, right?
 	var idcount = 1;
 
@@ -13,7 +13,7 @@
 
 
 	var makeHighlighter = function(fromTime, toTime) {
-		var daylightNode = document.createElement('div')
+		var daylightNode = document.createElement('div');
 
 		// Create parent node
 		var att1 = document.createAttribute("id");
@@ -26,14 +26,14 @@
 		// Create child daylightHighlighter node
 		var daylightHighlighter = document.createElement('div')
 		var att3 = document.createAttribute("id");
-		att3.value = "tgnowmarker";
+		att3.value = "daylightmarker";
 		var att4 = document.createAttribute("class");
-		att4.value = "tg-hourmarker tg-nowmarker";
+		att4.value = "tg-daylightmarker";
 		var att5 = document.createAttribute("style");
 		att5.value = "top: " + timeToPixels(fromTime) + "px; ";
 		att5.value += "height: " + (timeToPixels(toTime) - timeToPixels(fromTime)) + "px; ";
-		att5.value += "border-top: 1px solid #DD0; border-bottom: 1px solid #DD0; background-color: "+daylightColor+"; opacity: 0.5 ";
-		daylightHighlighter.setAttributeNode(att3);
+
+        daylightHighlighter.setAttributeNode(att3);
 		daylightHighlighter.setAttributeNode(att4);
 		daylightHighlighter.setAttributeNode(att5);
 
@@ -111,21 +111,18 @@
 		}
 	};
 
-	if(navigator.geolocation)
-	{
+	if(navigator.geolocation) {
 		navigator.geolocation.getCurrentPosition(showPosition,errorHandler);
 	}
-	else
-	{
+	else {
 		console.log("Sorry, your browser does not support geolocation services.");
 	}
 
 
 
 	console.log('Google Calendar Daylight loaded')
+    
     setInterval(function() { 
-
-
     	// Don't execute if jQuery is absent for some weird reason
     	if (window.jQuery) {
 

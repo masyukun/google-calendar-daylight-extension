@@ -21,6 +21,7 @@
   },
   "content_scripts": [{
     "js": ["background.js", "daylight.js", "jquery.min.js", "suncalc/suncalc.js"],
+    "css": ["daylight.css"],
     "matches": [
       "http://www.google.com/calendar/*", 
       "https://www.google.com/calendar/*", 

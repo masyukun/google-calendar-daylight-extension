@@ -1,0 +1,16 @@
+.tg-daylightmarker {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    top: 0;
+    height: 0;
+    border-top: 2px solid #ff7f6e;
+    overflow: hidden;
+
+    /* top and height computed dynamically */
+    border-top: 1px solid #DD0; 
+    border-bottom: 1px solid #DD0; 
+    background-color: #FFFFCC; 
+    opacity: 0.5; 
+}
+
