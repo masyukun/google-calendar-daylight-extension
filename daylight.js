@@ -59,14 +59,38 @@
 
 
 
-	function showPosition(position)
-	{
+	function sendPopupMessage(messageText) {
+		chrome.runtime.sendMessage({greeting: messageText}, function(response) {
+	  		console.log("[daylight.js] Response from popup: " + response.farewell);
+		});
+	};
+
+	window.alreadyListening = false;
+	if (!window.alreadyListening) {
+		console.log("Adding message listener for the first time.")
+		window.alreadyListening = true;
+
+		chrome.runtime.onMessage.addListener(
+			function(request, sender, sendResponse) {
+				console.log("[daylight.js] Received message"
+					+ (sender.tab ? " from a content script: " + sender.tab.url : " from the extension: ")
+					+  request.greeting);
+				if (request.greeting == "hello") {
+					console.log("[daylight.js] Sending response: 'goodbye'");
+					sendResponse({farewell: "goodbye"});
+				}
+			}
+		);
+	} else {
+		console.log("Already listening... skipping.")
+	}
+
+	function showPosition(position) {
 		window.lat=position.coords.latitude;
 		window.lon=position.coords.longitude;
 	};
 
-	function errorHandler(error)
-	{
+	function errorHandler(error) {
 		switch(error.code)
 		{
 			case error.PERMISSION_DENIED:

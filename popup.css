@@ -1,0 +1,74 @@
+body {
+    background-image: url('popupbg.jpg');
+    background-color: #3333AA;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    background-position: top top;
+}
+
+span#header {
+    vertical-align: middle;
+    white-space: nowrap;
+    display: table-cell;
+    text-align: center;
+}
+
+.daylightTitle {
+    font-family: sans-serif;
+    font-size: 30px;
+    color: #fbfeb1;
+    vertical-align: bottom;
+}
+
+table#options {
+    font-family: sans-serif;
+    color: #ffffdd;
+    font-size: small;
+}
+
+input[type=text]{
+    border: 0px;
+    padding: 5px;
+    background: rgba(255,255,255,0.3);
+}
+
+input[type='range'] {
+    -webkit-appearance: none;
+    border-radius: 5px;
+    box-shadow:  0 0 5px rgba(0,0,0,0.3);
+    background-color: #930;
+    height: 5px;
+    vertical-align: middle;
+}
+input[type='range']::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    border-radius: 10px;
+    background-color: #FFF;
+    border: 1px solid #FFF;
+    height: 15px;
+    width: 5px;
+}
+
+/* unvisited link */
+a:link {
+   color: #fbfeb1;
+    text-decoration: none;
+ }
+
+/* visited link */
+a:visited {
+   color: #fbfeb1;
+    text-decoration: none;
+ }
+
+/* mouse over link */
+a:hover {
+   color: #ffeebb;
+    text-decoration: none;
+ }
+
+/* selected link */
+a:active {
+   color: #fbfeb1;
+    text-decoration: line-through;
+ }

@@ -12,6 +12,7 @@
   "browser_action": {
     "name": "Daylight for Google Calendar",
     "default_icon": "icon.png",
+    "default_popup": "popup.html",
     "default_title": "Daylight for Google Calendar"
   },
   "author": "Matthew Royal",
