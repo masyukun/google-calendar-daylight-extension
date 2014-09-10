@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Daylight for Google Calendar",
   "short_name": "Daylight",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Visualizes daylight hours in Google Calendar for your current location.",
   "icons": { 
     "16": "icon16.png",
