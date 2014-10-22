@@ -57,6 +57,66 @@
 		return Math.floor(theTime / maxTime * maxPixels);
 	};
 
+	/** Display message in Calendar popup system */
+	var alertMessage = function(messageText) {
+
+		// Create notification node
+		var notifier = $('#ntowner')
+
+		var alertDiv = document.createElement('div')
+		var attId = document.createAttribute("id");
+		attId.value = "nt2";
+		var attClass = document.createAttribute("class");
+		attClass.value = "mbox-cont";
+		var attRole = document.createAttribute("role");
+		attRole.value = "alert";
+		var attAriaLive = document.createAttribute("aria-live");
+		attAriaLive.value = "assertive";
+		var attAriaAtomic = document.createAttribute("aria-atomic");
+		attAriaAtomic.value = "true";
+		var attAriaRelevant = document.createAttribute("aria-relevant");
+		attAriaRelevant.value = "all";
+		alertDiv.setAttributeNode(attId);
+		alertDiv.setAttributeNode(attClass);
+		alertDiv.setAttributeNode(attRole);
+		alertDiv.setAttributeNode(attAriaLive);
+		alertDiv.setAttributeNode(attAriaAtomic);
+		alertDiv.setAttributeNode(attAriaRelevant);
+		alertDiv.textContent = messageText; // message text content
+
+		// Table node
+		var alertTable = document.createElement('table')
+		var tableClass = document.createAttribute("class");
+		var tableCellpadding = document.createAttribute("cellpadding");
+		var tableCellspacing = document.createAttribute("cellspacing");
+		var tableRole = document.createAttribute("role");
+		tableClass.value = "mbox";
+		tableCellpadding.value = "0";
+		tableCellspacing.value = "0";
+		tableRole.value = "presentation";
+		alertTable.setAttributeNode(tableClass);
+		alertTable.setAttributeNode(tableCellpadding);
+		alertTable.setAttributeNode(tableCellspacing);
+		alertTable.setAttributeNode(tableRole);
+
+		var alertHead = document.createElement('div')
+		var headId = document.createAttribute("id");
+		headId.value = "nt1"
+		alertHead.setAttributeNode(headId);
+
+		// Construction
+		var alertTbody = document.createElement('tbody')
+		var alertRow = document.createElement('tr')
+		var alertColumn = document.createElement('td')
+		alertColumn.appendChild(alertDiv);
+		alertRow.appendChild(alertColumn);
+		alertTbody.appendChild(alertRow);
+		alertTable.appendChild(alertTbody);
+		alertHead.appendChild(alertTable);
+		notifier.appendChild(alertHead);
+
+	};
+
 
 
 	function sendPopupMessage(messageText) {
@@ -94,19 +154,27 @@
 		switch(error.code)
 		{
 			case error.PERMISSION_DENIED:
-				console.log("Could not get position as permission was denied.");
+				message = "Daylight: Could not get position as permission was denied.";
+				console.log(message);
+				alertMessage(message);
 				break;
 
 			case error.POSITION_UNAVAILABLE:
-				console.log("Could not get position as this information is not available at this time.");
+				message = "Daylight: Could not get position as this information is not available at this time.";
+				console.log(message);
+				alertMessage(message);
 				break;
 
 			case error.TIMEOUT:
-				console.log("Attempt to get position timed out.");
+				message = "Daylight: Attempt to get position timed out.";
+				console.log(message);
+				alertMessage(message);
 				break;
 
 			default:
-				console.log("Sorry, an error occurred. Code: "+error.code+" Message: "+error.message);
+				message = "Daylight: Sorry, an error occurred. Code: "+error.code+" Message: "+error.message;
+				console.log(message);
+				alertMessage(message);
 				break;
 		}
 	};
@@ -115,7 +183,9 @@
 		navigator.geolocation.getCurrentPosition(showPosition,errorHandler);
 	}
 	else {
-		console.log("Sorry, your browser does not support geolocation services.");
+		message = "Daylight: Sorry, your browser does not support geolocation services.";
+		console.log(message);
+		alertMessage(message);
 	}
 
 
