@@ -32,12 +32,15 @@
 		var att5 = document.createAttribute("style");
 		att5.value = "top: " + timeToPixels(fromTime) + "px; ";
 		att5.value += "height: " + (timeToPixels(toTime) - timeToPixels(fromTime)) + "px; ";
+		console.log(`daylightmarker => ${att5.value}`);
 
         daylightHighlighter.setAttributeNode(att3);
 		daylightHighlighter.setAttributeNode(att4);
 		daylightHighlighter.setAttributeNode(att5);
 
 		daylightNode.appendChild( daylightHighlighter );
+		console.log(`Created daylight node with fromTime ${fromTime} and toTime ${toTime}: \n${daylightHighlighter.id}`);
+
 		return daylightNode;
 	};
 
@@ -191,42 +194,112 @@
 
 
 	console.log('Google Calendar Daylight loaded')
+
+	var lastScrapeError = null;
+
+	function requireScrapedValue(name, value) {
+		if (value === null || typeof value === 'undefined') {
+			throw new Error('Missing scraped value: ' + name);
+		}
+		return value;
+	}
     
     setInterval(function() { 
     	// Don't execute if jQuery is absent for some weird reason
     	if (window.jQuery) {
+			try {
 
-			// Get the displayed year
-			var year = $('.date-picker-off .date-top').text()
-			year = year.substring(year.length-4, year.length)
+			// Get the displayed year from the calendar header near the visible grid table.
+			var yearText = '';
+			var calendarTable = requireScrapedValue('calendar grid table', document.querySelector('table[role="grid"]'));
+			var tableHeader = requireScrapedValue('calendar table header container', calendarTable.previousElementSibling);
+			if (tableHeader) {
+				var headerSpans = tableHeader.querySelectorAll('span');
+				for (var s = 0; s < headerSpans.length; s++) {
+					var spanNode = requireScrapedValue('header span at index ' + s, headerSpans[s]);
+					var spanText = (spanNode.textContent || '').trim();
+					if (/\b\d{4}\b/.test(spanText)) {
+						yearText = spanText;
+						break;
+					}
+				}
+			}
+
+			// Fallbacks for older/newer Google Calendar markup variants.
+			if (!yearText && calendarTable) {
+				yearText = calendarTable.getAttribute('aria-label') || '';
+			}
+			if (!yearText) {
+				yearText = $('.date-picker-off .date-top').text() || '';
+			}
+
+			var yearMatch = yearText.match(/\b(\d{4})\b/);
+			var year = yearMatch ? yearMatch[1] : (new Date()).getFullYear().toString();
+			console.log(`Current year: ${year}`);
 
 			// Get the "days" columns
-			var days = $('#tgTable tbody').children().last().children();
+			var days = $('div[role="columnheader"]');
+			requireScrapedValue('first day column header', days.get(0));
+			console.log(`Number of day columns: ${days.length}`);
 			
 			// Get the date for each day column
-			var dates = $('tr.wk-daynames').children();
+			var dates = days.children('h2');
+			requireScrapedValue('first date heading under day column', dates.get(0));
+			console.log(`Number of date columns: ${dates.length}`);
+
+			// Target cells where daylight overlays should be inserted.
+			var dayGridCells = $('div[role="gridcell"][data-column-index]').filter(function() {
+				var columnIndex = $(this).attr('data-column-index');
+				return columnIndex !== null && columnIndex !== 'null';
+			});
+			requireScrapedValue('first target grid cell', dayGridCells.get(0));
+			console.log(`Number of target grid cells: ${dayGridCells.length}`);
 			
 			// Add the daylight highlighters
 			var alreadypainted = $('div .daylight');
-			if ( alreadypainted.length < 7 && window.lat != 0 && window.lon != 0) {
-				for (i = 1; i <= days.length - 1; i++) {
-					var date = $(dates[i]).attr("title");
-					date = date.substring(4, date.length);
-					date = date.split('/');
-					var month = date[0];
-					var day = date[1];
+			console.log(`Number of already painted daylight highlighters: ${alreadypainted.length}`);
 
-					var currDate = new Date( year, month, day, 0, 0, 0, 0);
+			if ( alreadypainted.length < 7 && window.lat != 0 && window.lon != 0) {
+				console.group(`Adding daylight highlighters...`);
+				for (i = 0; i <= days.length - 1; i++) {
+					var dateHeading = requireScrapedValue('date heading for day index ' + i, dates[i]);
+					var targetGridCell = requireScrapedValue('target grid cell for day index ' + i, dayGridCells.get(i));
+					var rawDateLabel = requireScrapedValue('aria-label for day index ' + i, $(dateHeading).attr("aria-label"));
+					var date = rawDateLabel.replace(/,\s*today\s*$/i, '').trim();
+					var dateParts = date.split(',');
+					var monthDayText = dateParts.length > 1 ? dateParts[1].trim() : '';
+					var monthDayMatch = monthDayText.match(/^([A-Za-z]+)\s+(\d{1,2})$/);
+					if (!monthDayMatch) {
+						console.log(`Could not parse date label for day ${i}: ${date}`);
+						continue;
+					}
+
+					var month = new Date(monthDayMatch[1] + ' 1, ' + year).getMonth();
+					var day = parseInt(monthDayMatch[2], 10);
+					console.log(`Day ${i}: month ${month + 1}, day ${day}`);
+
+					var currDate = new Date(parseInt(year, 10), month, day, 0, 0, 0, 0);
 					var sunstuff = SunCalc.getTimes(currDate, window.lat, window.lon);
 					var sunrise = sunstuff.sunrise.getHours() * 100 + sunstuff.sunrise.getMinutes();
 					var sunset = sunstuff.sunset.getHours()  * 100 + sunstuff.sunset.getMinutes();
+					console.log(`Sunrise: ${sunrise}, Sunset: ${sunset}`);
 
-					days[i].insertBefore( 
+					targetGridCell.insertBefore(
 						makeHighlighter(sunrise, sunset),
-						days[i].firstChild );
+						targetGridCell.firstChild);
+					console.log(`Added daylight highlighter for day ${i}`);
+				}
+				console.groupEnd();
+			}
+
+			lastScrapeError = null;
+			} catch (error) {
+				if (error && error.message !== lastScrapeError) {
+					console.error(`[daylight] ${error.message}`);
+					lastScrapeError = error.message;
 				}
 			}
-    	}
+    	} 
     }, 500);
 
 })();
