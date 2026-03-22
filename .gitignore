@@ -1,0 +1,29 @@
+# Node.js dependencies
+node_modules/
+
+# Package manager caches and logs
+.npm/
+.pnpm-store/
+.yarn/
+yarn-error.log*
+yarn-debug.log*
+npm-debug.log*
+pnpm-debug.log*
+
+# Build and coverage output
+dist/
+build/
+coverage/
+.nyc_output/
+
+# Environment files
+.env
+.env.*
+
+# OS/editor noise
+.DS_Store
+.vscode/
+.idea/
+
+# Generated archives
+*.zip
