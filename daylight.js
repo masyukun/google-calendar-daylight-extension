@@ -235,17 +235,17 @@
 
 			var yearMatch = yearText.match(/\b(\d{4})\b/);
 			var year = yearMatch ? yearMatch[1] : (new Date()).getFullYear().toString();
-			console.log(`Current year: ${year}`);
+			// console.log(`Current year: ${year}`);
 
 			// Get the "days" columns
 			var days = $('div[role="columnheader"]');
 			requireScrapedValue('first day column header', days.get(0));
-			console.log(`Number of day columns: ${days.length}`);
+			// console.log(`Number of day columns: ${days.length}`);
 			
 			// Get the date for each day column
 			var dates = days.children('h2');
 			requireScrapedValue('first date heading under day column', dates.get(0));
-			console.log(`Number of date columns: ${dates.length}`);
+			// console.log(`Number of date columns: ${dates.length}`);
 
 			// Target cells where daylight overlays should be inserted.
 			var dayGridCells = $('div[role="gridcell"][data-column-index]').filter(function() {
@@ -253,11 +253,11 @@
 				return columnIndex !== null && columnIndex !== 'null';
 			});
 			requireScrapedValue('first target grid cell', dayGridCells.get(0));
-			console.log(`Number of target grid cells: ${dayGridCells.length}`);
+			// console.log(`Number of target grid cells: ${dayGridCells.length}`);
 			
 			// Add the daylight highlighters
 			var alreadypainted = $('div .daylight');
-			console.log(`Number of already painted daylight highlighters: ${alreadypainted.length}`);
+			// console.log(`Number of already painted daylight highlighters: ${alreadypainted.length}`);
 
 			if ( alreadypainted.length < 7 && window.lat != 0 && window.lon != 0) {
 				console.group(`Adding daylight highlighters...`);
@@ -270,7 +270,7 @@
 					var monthDayText = dateParts.length > 1 ? dateParts[1].trim() : '';
 					var monthDayMatch = monthDayText.match(/^([A-Za-z]+)\s+(\d{1,2})$/);
 					if (!monthDayMatch) {
-						console.log(`Could not parse date label for day ${i}: ${date}`);
+						// console.log(`Could not parse date label for day ${i}: ${date}`);
 						continue;
 					}
 
