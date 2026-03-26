@@ -12,5 +12,20 @@
     border-bottom: 1px solid #DD0; 
     background-color: #FFFFCC; 
     opacity: 0.5; 
+    transition: opacity 0.5s ease-in-out;
+    animation: daylightFadeIn 0.5s ease-in-out;
+}
+
+.tg-daylightmarker.is-removing {
+    opacity: 0;
+}
+
+@keyframes daylightFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 0.5;
+    }
 }
 
