@@ -46,7 +46,7 @@
 
 	/** theTime should be in 24 hour format: 0000 to 2399 */
 	var timeToPixels = function(theTime) {
-		var maxPixels = 1008;
+		var maxPixels = 960; // Changed from original of 1008;
 		var maxTime = 2399;
 
 		// Type-checking, reverts to 0 mark
