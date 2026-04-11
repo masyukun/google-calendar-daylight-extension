@@ -1,4 +1,4 @@
-.tg-daylightmarker {
+.tg-daylight-marker {
     position: absolute;
     left: 0;
     width: 100%;
@@ -16,7 +16,12 @@
     animation: daylightFadeIn 0.5s ease-in-out;
 }
 
-.tg-daylightmarker.is-removing {
+.tg-daylight-marker.is-removing,
+.tg-astronomical-twilight-marker.is-removing,
+.tg-nautical-twilight-marker.is-removing,
+.tg-civil-twilight-marker.is-removing,
+.tg-sunrise-sunset-marker.is-removing,
+.tg-golden-hour-marker.is-removing {
     opacity: 0;
 }
 
@@ -27,5 +32,90 @@
     to {
         opacity: 0.5;
     }
+}
+
+.tg-astronomical-twilight-marker {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    top: 0;
+    height: 0;
+    overflow: hidden;
+
+    /* top and height computed dynamically */
+    border-top: 1px solid #FF88FF;
+    border-bottom: 1px solid #FF88FF;
+    background-color: #FF88FF;
+    opacity: 0.1;
+    transition: opacity 0.5s ease-in-out;
+    animation: daylightFadeIn 0.5s ease-in-out;
+}
+
+.tg-nautical-twilight-marker {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    top: 0;
+    height: 0;
+    overflow: hidden;
+
+    /* top and height computed dynamically */
+    border-top: 1px solid #88FFFF;
+    border-bottom: 1px solid #88FFFF;
+    background-color: #88FFFF;
+    opacity: 0.1;
+    transition: opacity 0.5s ease-in-out;
+    animation: daylightFadeIn 0.5s ease-in-out;
+}
+
+.tg-civil-twilight-marker {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    top: 0;
+    height: 0;
+    overflow: hidden;
+
+    /* top and height computed dynamically */
+    border-top: 1px solid #8888FF;
+    border-bottom: 1px solid #8888FF;
+    background-color: #8888FF;
+    opacity: 0.1;
+    transition: opacity 0.5s ease-in-out;
+    animation: daylightFadeIn 0.5s ease-in-out;
+}
+
+.tg-sunrise-sunset-marker {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    top: 0;
+    height: 0;
+    overflow: hidden;
+
+    /* top and height computed dynamically */
+    border-top: 1px solid #FF7777;
+    border-bottom: 1px solid #FF7777;
+    background-color: #FF7777;
+    opacity: 0.5;
+    transition: opacity 0.5s ease-in-out;
+    animation: daylightFadeIn 0.5s ease-in-out;
+}
+
+.tg-golden-hour-marker {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    top: 0;
+    height: 0;
+    overflow: hidden;
+
+    /* top and height computed dynamically */
+    border-top: 1px solid #FFFF00;
+    border-bottom: 1px solid #FFFF00;
+    background-color: #FFFF00;
+    opacity: 0.5;
+    transition: opacity 0.5s ease-in-out;
+    animation: daylightFadeIn 0.5s ease-in-out;
 }
 

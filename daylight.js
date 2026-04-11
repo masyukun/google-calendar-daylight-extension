@@ -9,10 +9,29 @@
     window.lon = 0.0;
 
     // Let the user play with this at some point
-    var daylightColor = '#FFFFCC';
+	let astronomicalTwilightColor = '#FF88FF';
+	let nauticalTwilightColor = '#88FFFF';
+	let civilTwilightColor = '#8888FF';
+	let sunriseSunsetColor = '#FF7777';
+	let goldenHourColor = '#FFFF00';
+	let daylightColor = '#FFFFCC';
+    
 
+	const makeHighlighter = function(daylightPeriods) {
+		var periodColorMap = {
+			'morningAstronomicalTwilight': 'astronomical-twilight',
+			'morningNauticalTwilight':     'nautical-twilight',
+			'morningCivilTwilight':        'civil-twilight',
+			'sunrisePeriod':               'sunrise-sunset',
+			'morningGoldenHour':           'golden-hour',
+			'daytime':                     'daylight',
+			'eveningGoldenHour':           'golden-hour',
+			'sunsetPeriod':                'sunrise-sunset',
+			'eveningCivilTwilight':        'civil-twilight',
+			'eveningNauticalTwilight':     'nautical-twilight',
+			'eveningAstronomicalTwilight': 'astronomical-twilight'
+		};
 
-	var makeHighlighter = function(fromTime, toTime) {
 		var daylightNode = document.createElement('div');
 
 		// Create parent node
@@ -23,29 +42,35 @@
 		daylightNode.setAttributeNode(att1);
 		daylightNode.setAttributeNode(att2);
 
-		// Create child daylightHighlighter node
-		var daylightHighlighter = document.createElement('div')
-		var att3 = document.createAttribute("id");
-		att3.value = "daylightmarker";
-		var att4 = document.createAttribute("class");
-		att4.value = "tg-daylightmarker";
-		var att5 = document.createAttribute("style");
-		att5.value = "top: " + timeToPixels(fromTime) + "px; ";
-		att5.value += "height: " + (timeToPixels(toTime) - timeToPixels(fromTime)) + "px; ";
-		console.log(`daylightmarker => ${att5.value}`);
+		// Create a child highlighter div for each period
+		for (var periodName in daylightPeriods) {
+			var period = daylightPeriods[periodName];
+			var coloration = periodColorMap[periodName];
+			if (!coloration) continue;
 
-        daylightHighlighter.setAttributeNode(att3);
-		daylightHighlighter.setAttributeNode(att4);
-		daylightHighlighter.setAttributeNode(att5);
+			var daylightHighlighter = document.createElement('div');
+			var att3 = document.createAttribute("id");
+			att3.value = `daylightmarker-${periodName}`;
+			var att4 = document.createAttribute("class");
+			att4.value = `tg-${coloration}-marker`;
+			var att5 = document.createAttribute("style");
+			att5.value = "top: " + timeToPixels(period.start) + "px; ";
+			att5.value += "height: " + (timeToPixels(period.end) - timeToPixels(period.start)) + "px; ";
+			console.log(`${coloration}-marker => ${att5.value}`);
 
-		daylightNode.appendChild( daylightHighlighter );
-		console.log(`Created daylight node with fromTime ${fromTime} and toTime ${toTime}: \n${daylightHighlighter.id}`);
+			daylightHighlighter.setAttributeNode(att3);
+			daylightHighlighter.setAttributeNode(att4);
+			daylightHighlighter.setAttributeNode(att5);
 
+			daylightNode.appendChild(daylightHighlighter);
+		}
+
+		console.log(`Created daylight node: ${daylightNode.id}`);
 		return daylightNode;
 	};
 
 	/** theTime should be in 24 hour format: 0000 to 2399 */
-	var timeToPixels = function(theTime) {
+	const timeToPixels = function(theTime) {
 		var maxPixels = 960; // Changed from original of 1008;
 		var maxTime = 2399;
 
@@ -61,7 +86,7 @@
 	};
 
 	/** Display message in Calendar popup system */
-	var alertMessage = function(messageText) {
+	const alertMessage = function(messageText) {
 
 		// Create notification node
 		var notifier = $('#ntowner')
@@ -120,7 +145,10 @@
 
 	};
 
-
+	/** Convert a JavaScript Date object to Google Calendar time format */
+	const asGCalTime = function(date) {
+		return date.getHours() * 100 + date.getMinutes();
+	};
 
 	function sendPopupMessage(messageText) {
 		chrome.runtime.sendMessage({greeting: messageText}, function(response) {
@@ -262,9 +290,12 @@
 			if ( alreadypainted.length < 7 && window.lat != 0 && window.lon != 0) {
 				console.group(`Adding daylight highlighters...`);
 				for (i = 0; i <= days.length - 1; i++) {
+					// Get oriented on where things are in the Calendar page
 					var dateHeading = requireScrapedValue('date heading for day index ' + i, dates[i]);
 					var targetGridCell = requireScrapedValue('target grid cell for day index ' + i, dayGridCells.get(i));
 					var rawDateLabel = requireScrapedValue('aria-label for day index ' + i, $(dateHeading).attr("aria-label"));
+					
+					// Format the date found on the page into something that SunCalc can understand.
 					var date = rawDateLabel.replace(/,\s*today\s*$/i, '').trim();
 					var dateParts = date.split(',');
 					var monthDayText = dateParts.length > 1 ? dateParts[1].trim() : '';
@@ -273,19 +304,71 @@
 						// console.log(`Could not parse date label for day ${i}: ${date}`);
 						continue;
 					}
-
 					var month = new Date(monthDayMatch[1] + ' 1, ' + year).getMonth();
 					var day = parseInt(monthDayMatch[2], 10);
 					console.log(`Day ${i}: month ${month + 1}, day ${day}`);
 
+					// Get the SunCalc events for this date and location
 					var currDate = new Date(parseInt(year, 10), month, day, 0, 0, 0, 0);
 					var sunstuff = SunCalc.getTimes(currDate, window.lat, window.lon);
-					var sunrise = sunstuff.sunrise.getHours() * 100 + sunstuff.sunrise.getMinutes();
-					var sunset = sunstuff.sunset.getHours()  * 100 + sunstuff.sunset.getMinutes();
-					console.log(`Sunrise: ${sunrise}, Sunset: ${sunset}`);
 
+					var sunrise = asGCalTime(sunstuff.sunrise);
+					var sunset = asGCalTime(sunstuff.sunset);
+					// console.log(`Sunrise: ${sunrise}, Sunset: ${sunset}`);
+
+					/**
+					 * Period			Description
+					 * ================	===========================================================
+					// nightEnd			night ends (morning astronomical twilight starts)
+					// nauticalDawn		nautical dawn (morning nautical twilight starts)
+					// dawn				dawn (morning nautical twilight ends, morning civil twilight starts)
+					// sunrise			sunrise (top edge of the sun appears on the horizon)
+					// sunriseEnd		sunrise ends (bottom edge of the sun touches the horizon)
+					// goldenHourEnd	morning golden hour (soft light, best time for photography) ends
+					// solarNoon		solar noon (sun is in the highest position)
+					// goldenHour		evening golden hour starts
+					// sunsetStart		sunset starts (bottom edge of the sun touches the horizon)
+					// sunset			sunset (sun disappears below the horizon, evening civil twilight starts)
+					// dusk				dusk (evening nautical twilight starts)
+					// nauticalDusk		nautical dusk (evening astronomical twilight starts)
+					//
+					// night			night starts (dark enough for astronomical observations)
+					// nadir			nadir (darkest moment of the night, sun is in the lowest position)
+					 */
+
+					
+					var nightEnd = asGCalTime(sunstuff.nightEnd);
+					var nauticalDawn = asGCalTime(sunstuff.nauticalDawn);
+					var dawn = asGCalTime(sunstuff.dawn);
+					var sunrise = asGCalTime(sunstuff.sunrise);
+					var sunriseEnd = asGCalTime(sunstuff.sunriseEnd);
+					var goldenHourEnd = asGCalTime(sunstuff.goldenHourEnd);
+					var solarNoon = asGCalTime(sunstuff.solarNoon);
+					var goldenHour = asGCalTime(sunstuff.goldenHour);
+					var sunsetStart = asGCalTime(sunstuff.sunsetStart);
+					var sunset = asGCalTime(sunstuff.sunset);
+					var dusk = asGCalTime(sunstuff.dusk);
+					var nauticalDusk = asGCalTime(sunstuff.nauticalDusk);
+					var night = asGCalTime(sunstuff.night);
+					var nadir = asGCalTime(sunstuff.nadir);
+					console.log(`\nNight End: ${nightEnd}, \nNautical Dawn: ${nauticalDawn}, \nDawn: ${dawn}, \nSunrise: ${sunrise}, \nSunrise End: ${sunriseEnd}, \nGolden Hour End: ${goldenHourEnd}, \nSolar Noon: ${solarNoon}, \nGolden Hour Start: ${goldenHour}, \nSunset Start: ${sunsetStart}, \nSunset: ${sunset}, \nDusk: ${dusk}, \nNautical Dusk: ${nauticalDusk}, \nNight: ${night}, \nNadir: ${nadir}\n\n\n`);
+
+					// Periods of daylight
+					let daylightPeriods = {
+					 "morningAstronomicalTwilight": {"start": nightEnd,		"end": nauticalDawn},
+					 "morningNauticalTwilight": 	{"start": nauticalDawn,	"end": dawn},
+					 "morningCivilTwilight": 		{"start": dawn,			"end": sunrise},
+					 "sunrisePeriod": 				{"start": sunrise,		"end": sunriseEnd},
+					 "morningGoldenHour": 			{"start": sunriseEnd, 	"end": goldenHourEnd},
+					 "daytime":						{"start": goldenHourEnd,"end": goldenHour},
+					 "eveningGoldenHour": 			{"start": goldenHour,	"end": sunsetStart},
+					 "sunsetPeriod": 				{"start": sunsetStart,	"end": sunset},
+					 "eveningCivilTwilight": 		{"start": sunset,		"end": dusk},
+					 "eveningNauticalTwilight": 	{"start": dusk,			"end": nauticalDusk},
+					 "eveningAstronomicalTwilight": {"start": nauticalDusk,	"end": night}
+					}
 					targetGridCell.insertBefore(
-						makeHighlighter(sunrise, sunset),
+						makeHighlighter(daylightPeriods),
 						targetGridCell.firstChild);
 					console.log(`Added daylight highlighter for day ${i}`);
 				}
