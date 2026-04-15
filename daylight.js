@@ -8,6 +8,28 @@
     window.lat = 0.0;
     window.lon = 0.0;
 
+    // Debug flag: set to false for production to suppress all console output
+	let debugOutput = false;
+
+	// Custom logging functions that respect debugOutput flag
+	const log = function(message) {
+		if (debugOutput) {
+			console.log(message);
+		}
+	};
+
+	const group = function(label) {
+		if (debugOutput) {
+			console.group(label);
+		}
+	};
+
+	const groupEnd = function() {
+		if (debugOutput) {
+			console.groupEnd();
+		}
+	};
+
     // Let the user play with this at some point
 	let astronomicalTwilightColor = '#FF88FF';
 	let nauticalTwilightColor = '#88FFFF';
@@ -15,6 +37,44 @@
 	let sunriseSunsetColor = '#FF7777';
 	let goldenHourColor = '#FFFF00';
 	let daylightColor = '#FFFFCC';
+	const colorStorageKey = 'daylightColorSettings';
+
+	const defaultColors = {
+		daylightColor: daylightColor,
+		astronomicalTwilightColor: '#8888FF',
+		nauticalTwilightColor: '#FF88FF',
+		civilTwilightColor: '#88FFFF',
+		sunriseSunsetColor: sunriseSunsetColor,
+		goldenHourColor: goldenHourColor
+	};
+
+	const normalizeHexColor = function(value, fallback) {
+		if (typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value)) {
+			return value.toUpperCase();
+		}
+		return fallback;
+	};
+
+	const applyOverlayColors = function(colors) {
+		document.documentElement.style.setProperty('--daylight-color', normalizeHexColor(colors.daylightColor, defaultColors.daylightColor));
+		document.documentElement.style.setProperty('--astronomical-twilight-color', normalizeHexColor(colors.astronomicalTwilightColor, defaultColors.astronomicalTwilightColor));
+		document.documentElement.style.setProperty('--nautical-twilight-color', normalizeHexColor(colors.nauticalTwilightColor, defaultColors.nauticalTwilightColor));
+		document.documentElement.style.setProperty('--civil-twilight-color', normalizeHexColor(colors.civilTwilightColor, defaultColors.civilTwilightColor));
+		document.documentElement.style.setProperty('--sunrise-sunset-color', normalizeHexColor(colors.sunriseSunsetColor, defaultColors.sunriseSunsetColor));
+		document.documentElement.style.setProperty('--golden-hour-color', normalizeHexColor(colors.goldenHourColor, defaultColors.goldenHourColor));
+	};
+
+	const loadOverlayColors = function() {
+		if (!chrome.storage || !chrome.storage.sync) {
+			applyOverlayColors(defaultColors);
+			return;
+		}
+
+		chrome.storage.sync.get({ [colorStorageKey]: defaultColors }, function(items) {
+			var storedColors = items[colorStorageKey] || defaultColors;
+			applyOverlayColors(storedColors);
+		});
+	};
     
 
 	const makeHighlighter = function(daylightPeriods) {
@@ -56,7 +116,7 @@
 			var att5 = document.createAttribute("style");
 			att5.value = "top: " + timeToPixels(period.start) + "px; ";
 			att5.value += "height: " + (timeToPixels(period.end) - timeToPixels(period.start)) + "px; ";
-			console.log(`${coloration}-marker => ${att5.value}`);
+				log(`${coloration}-marker => ${att5.value}`);
 
 			daylightHighlighter.setAttributeNode(att3);
 			daylightHighlighter.setAttributeNode(att4);
@@ -65,7 +125,7 @@
 			daylightNode.appendChild(daylightHighlighter);
 		}
 
-		console.log(`Created daylight node: ${daylightNode.id}`);
+		log(`Created daylight node: ${daylightNode.id}`);
 		return daylightNode;
 	};
 
@@ -152,28 +212,36 @@
 
 	function sendPopupMessage(messageText) {
 		chrome.runtime.sendMessage({greeting: messageText}, function(response) {
-	  		console.log("[daylight.js] Response from popup: " + response.farewell);
+	  		log("[daylight.js] Response from popup: " + response.farewell);
 		});
 	};
 
+	loadOverlayColors();
+
 	window.alreadyListening = false;
 	if (!window.alreadyListening) {
-		console.log("Adding message listener for the first time.")
+		log("Adding message listener for the first time.")
 		window.alreadyListening = true;
 
 		chrome.runtime.onMessage.addListener(
 			function(request, sender, sendResponse) {
-				console.log("[daylight.js] Received message"
+				if (request && request.type === 'daylightColorsUpdated' && request.colors) {
+					applyOverlayColors(request.colors);
+					sendResponse({ status: 'ok' });
+					return;
+				}
+
+				log("[daylight.js] Received message"
 					+ (sender.tab ? " from a content script: " + sender.tab.url : " from the extension: ")
 					+  request.greeting);
 				if (request.greeting == "hello") {
-					console.log("[daylight.js] Sending response: 'goodbye'");
+					log("[daylight.js] Sending response: 'goodbye'");
 					sendResponse({farewell: "goodbye"});
 				}
 			}
 		);
 	} else {
-		console.log("Already listening... skipping.")
+		log("Already listening... skipping.")
 	}
 
 	function showPosition(position) {
@@ -186,25 +254,25 @@
 		{
 			case error.PERMISSION_DENIED:
 				message = "Daylight: Could not get position as permission was denied.";
-				console.log(message);
+				log(message);
 				alertMessage(message);
 				break;
 
 			case error.POSITION_UNAVAILABLE:
 				message = "Daylight: Could not get position as this information is not available at this time.";
-				console.log(message);
+				log(message);
 				alertMessage(message);
 				break;
 
 			case error.TIMEOUT:
 				message = "Daylight: Attempt to get position timed out.";
-				console.log(message);
+				log(message);
 				alertMessage(message);
 				break;
 
 			default:
 				message = "Daylight: Sorry, an error occurred. Code: "+error.code+" Message: "+error.message;
-				console.log(message);
+				log(message);
 				alertMessage(message);
 				break;
 		}
@@ -215,13 +283,13 @@
 	}
 	else {
 		message = "Daylight: Sorry, your browser does not support geolocation services.";
-		console.log(message);
+		log(message);
 		alertMessage(message);
 	}
 
 
 
-	console.log('Google Calendar Daylight loaded')
+	log('Google Calendar Daylight loaded')
 
 	var lastScrapeError = null;
 
@@ -288,7 +356,7 @@
 			// console.log(`Number of already painted daylight highlighters: ${alreadypainted.length}`);
 
 			if ( alreadypainted.length < 7 && window.lat != 0 && window.lon != 0) {
-				console.group(`Adding daylight highlighters...`);
+				group(`Adding daylight highlighters...`);
 				for (i = 0; i <= days.length - 1; i++) {
 					// Get oriented on where things are in the Calendar page
 					var dateHeading = requireScrapedValue('date heading for day index ' + i, dates[i]);
@@ -306,7 +374,7 @@
 					}
 					var month = new Date(monthDayMatch[1] + ' 1, ' + year).getMonth();
 					var day = parseInt(monthDayMatch[2], 10);
-					console.log(`Day ${i}: month ${month + 1}, day ${day}`);
+					log(`Day ${i}: month ${month + 1}, day ${day}`);
 
 					// Get the SunCalc events for this date and location
 					var currDate = new Date(parseInt(year, 10), month, day, 0, 0, 0, 0);
@@ -351,7 +419,7 @@
 					var nauticalDusk = asGCalTime(sunstuff.nauticalDusk);
 					var night = asGCalTime(sunstuff.night);
 					var nadir = asGCalTime(sunstuff.nadir);
-					console.log(`\nNight End: ${nightEnd}, \nNautical Dawn: ${nauticalDawn}, \nDawn: ${dawn}, \nSunrise: ${sunrise}, \nSunrise End: ${sunriseEnd}, \nGolden Hour End: ${goldenHourEnd}, \nSolar Noon: ${solarNoon}, \nGolden Hour Start: ${goldenHour}, \nSunset Start: ${sunsetStart}, \nSunset: ${sunset}, \nDusk: ${dusk}, \nNautical Dusk: ${nauticalDusk}, \nNight: ${night}, \nNadir: ${nadir}\n\n\n`);
+					log(`\nNight End: ${nightEnd}, \nNautical Dawn: ${nauticalDawn}, \nDawn: ${dawn}, \nSunrise: ${sunrise}, \nSunrise End: ${sunriseEnd}, \nGolden Hour End: ${goldenHourEnd}, \nSolar Noon: ${solarNoon}, \nGolden Hour Start: ${goldenHour}, \nSunset Start: ${sunsetStart}, \nSunset: ${sunset}, \nDusk: ${dusk}, \nNautical Dusk: ${nauticalDusk}, \nNight: ${night}, \nNadir: ${nadir}\n\n\n`);
 
 					// Periods of daylight
 					let daylightPeriods = {
@@ -370,9 +438,9 @@
 					targetGridCell.insertBefore(
 						makeHighlighter(daylightPeriods),
 						targetGridCell.firstChild);
-					console.log(`Added daylight highlighter for day ${i}`);
+						log(`Added daylight highlighter for day ${i}`);
 				}
-				console.groupEnd();
+				groupEnd();
 			}
 
 			lastScrapeError = null;

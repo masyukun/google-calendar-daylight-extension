@@ -1,82 +1,110 @@
-var listeningAlready = false;
+const COLOR_STORAGE_KEY = 'daylightColorSettings';
 
-function sendContentMessage(event) {
-    event = event || window.event //cross-browser event
-    event.stopPropagation ? event.stopPropagation() : (event.cancelBubble=true)
+const DEFAULT_COLORS = {
+    daylightColor: '#FFFFCC',
+    astronomicalTwilightColor: '#8888FF',
+    nauticalTwilightColor: '#FF88FF',
+    civilTwilightColor: '#88FFFF',
+    sunriseSunsetColor: '#FF7777',
+    goldenHourColor: '#FFFF00'
+};
 
-    var messageObject = {
-        opacity: document.getElementById("opacityControl"),
-        location: document.getElementById("geoControl")
+function normalizeHexColor(value, fallback) {
+    if (typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value)) {
+        return value.toUpperCase();
+    }
+    return fallback;
+}
+
+function setStatus(message) {
+    const statusNode = document.getElementById('saveStatus');
+    if (statusNode) {
+        statusNode.textContent = message;
+    }
+}
+
+function getCurrentFormColors() {
+    return {
+        daylightColor: normalizeHexColor(document.getElementById('daylightColor').value, DEFAULT_COLORS.daylightColor),
+        astronomicalTwilightColor: normalizeHexColor(document.getElementById('astronomicalTwilightColor').value, DEFAULT_COLORS.astronomicalTwilightColor),
+        nauticalTwilightColor: normalizeHexColor(document.getElementById('nauticalTwilightColor').value, DEFAULT_COLORS.nauticalTwilightColor),
+        civilTwilightColor: normalizeHexColor(document.getElementById('civilTwilightColor').value, DEFAULT_COLORS.civilTwilightColor),
+        sunriseSunsetColor: normalizeHexColor(document.getElementById('sunriseSunsetColor').value, DEFAULT_COLORS.sunriseSunsetColor),
+        goldenHourColor: normalizeHexColor(document.getElementById('goldenHourColor').value, DEFAULT_COLORS.goldenHourColor)
     };
-    var messageText = "hello";
-    console.log('Sending message: ['+messageText+']')
-    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-        chrome.tabs.sendMessage(tabs[0].id, {greeting: messageText}, function(response) {
-            console.log("[popup.js] Response from content: " + response.farewell);
+}
+
+function applyColorsToForm(colors) {
+    document.getElementById('daylightColor').value = colors.daylightColor;
+    document.getElementById('astronomicalTwilightColor').value = colors.astronomicalTwilightColor;
+    document.getElementById('nauticalTwilightColor').value = colors.nauticalTwilightColor;
+    document.getElementById('civilTwilightColor').value = colors.civilTwilightColor;
+    document.getElementById('sunriseSunsetColor').value = colors.sunriseSunsetColor;
+    document.getElementById('goldenHourColor').value = colors.goldenHourColor;
+}
+
+function notifyActiveCalendarTab(colors) {
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+        if (!tabs || tabs.length === 0) {
+            return;
+        }
+
+        chrome.tabs.sendMessage(tabs[0].id, {
+            type: 'daylightColorsUpdated',
+            colors: colors
+        }, function() {
+            // Ignore runtime messaging errors when not on a Calendar tab.
+            void chrome.runtime.lastError;
         });
     });
-};
+}
 
-function showPosition(position) {
-    var geoControl = document.getElementById("geoControl");
-    geoControl.value = position.coords.latitude + ", " + position.coords.longitude;
-};
-
-function errorHandler(error) {
-    switch(error.code)
-    {
-        case error.PERMISSION_DENIED:
-            console.log("Could not get position as permission was denied.");
-            var geoControl = document.getElementById("geoControl");
-            geoControl.value = "PERMISSION DENIED";
-            break;
-
-        case error.POSITION_UNAVAILABLE:
-            console.log("Could not get position as this information is not available at this time.");
-            var geoControl = document.getElementById("geoControl");
-            geoControl.value = "POSITION UNAVAILABLE";
-            break;
-
-        case error.TIMEOUT:
-            console.log("Attempt to get position timed out.");
-            var geoControl = document.getElementById("geoControl");
-            geoControl.value = "TIMEOUT";
-            break;
-
-        default:
-            console.log("Sorry, an error occurred. Code: "+error.code+" Message: "+error.message);
-            var geoControl = document.getElementById("geoControl");
-            geoControl.value = "ERROR: " + error.message;
-            break;
-    }
-};
-
-
-// On page load
-window.addEventListener("load", function load(event){
-    window.removeEventListener("load", load, false); //remove listener, no longer needed
-    console.log("In page load code.");
-    
-    var theButton = document.getElementById("clickMe");
-    if (theButton) {
-        // Add click listener for button
-        if (!listeningAlready) {
-            listeningAlready = true;
-            console.log("Adding button click event listener for the first time.")
-            window.debugButton = theButton;
-            theButton.addEventListener("click", sendContentMessage, false);
-            
-            if(navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(showPosition,errorHandler);
-            }
-            else {
-                console.log("Sorry, your browser does not support geolocation services.");
-            }
-
-        } else {
-            console.log("Already added button click... skipping.")
+function saveColors() {
+    const colors = getCurrentFormColors();
+    chrome.storage.sync.set({ [COLOR_STORAGE_KEY]: colors }, function() {
+        if (chrome.runtime.lastError) {
+            setStatus('Save failed');
+            return;
         }
-    } else {
-        console.log("Button not ready yet for event adding.")
-    }
-},false);
+
+        setStatus('Saved');
+        notifyActiveCalendarTab(colors);
+    });
+}
+
+function resetColors() {
+    applyColorsToForm(DEFAULT_COLORS);
+    chrome.storage.sync.set({ [COLOR_STORAGE_KEY]: DEFAULT_COLORS }, function() {
+        if (chrome.runtime.lastError) {
+            setStatus('Reset failed');
+            return;
+        }
+
+        setStatus('Reset to defaults');
+        notifyActiveCalendarTab(DEFAULT_COLORS);
+    });
+}
+
+function loadColors() {
+    chrome.storage.sync.get({ [COLOR_STORAGE_KEY]: DEFAULT_COLORS }, function(items) {
+        const storedColors = items[COLOR_STORAGE_KEY] || DEFAULT_COLORS;
+        const normalizedColors = {
+            daylightColor: normalizeHexColor(storedColors.daylightColor, DEFAULT_COLORS.daylightColor),
+            astronomicalTwilightColor: normalizeHexColor(storedColors.astronomicalTwilightColor, DEFAULT_COLORS.astronomicalTwilightColor),
+            nauticalTwilightColor: normalizeHexColor(storedColors.nauticalTwilightColor, DEFAULT_COLORS.nauticalTwilightColor),
+            civilTwilightColor: normalizeHexColor(storedColors.civilTwilightColor, DEFAULT_COLORS.civilTwilightColor),
+            sunriseSunsetColor: normalizeHexColor(storedColors.sunriseSunsetColor, DEFAULT_COLORS.sunriseSunsetColor),
+            goldenHourColor: normalizeHexColor(storedColors.goldenHourColor, DEFAULT_COLORS.goldenHourColor)
+        };
+
+        applyColorsToForm(normalizedColors);
+        setStatus('');
+    });
+}
+
+window.addEventListener('load', function() {
+    loadColors();
+
+    document.getElementById('saveColors').addEventListener('click', saveColors);
+    document.getElementById('resetColors').addEventListener('click', resetColors);
+});
