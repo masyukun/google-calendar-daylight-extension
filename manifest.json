@@ -31,6 +31,7 @@
   "host_permissions": [
     "https://calendar.google.com/calendar/*",
     "https://www.google.com/calendar/*",
-    "https://google.com/calendar/*"
+    "https://google.com/calendar/*",
+    "https://nominatim.openstreetmap.org/*"
   ]
 }

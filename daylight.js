@@ -38,6 +38,9 @@
 	let goldenHourColor = '#FFFF00';
 	let daylightColor = '#FFFFCC';
 	const colorStorageKey = 'daylightColorSettings';
+	const locationStorageKey = 'daylightLocationSettings';
+	let geolocationWatchId = null;
+	let manualLocationEnabled = false;
 
 	const defaultColors = {
 		daylightColor: daylightColor,
@@ -55,6 +58,71 @@
 		return fallback;
 	};
 
+	const isExtensionContextValid = function() {
+		try {
+			return typeof chrome !== 'undefined' && !!(chrome.runtime && chrome.runtime.id);
+		} catch (error) {
+			return false;
+		}
+	};
+
+	const safeStorageGet = function(defaults, callback) {
+		if (!isExtensionContextValid()) {
+			callback(defaults);
+			return;
+		}
+
+		try {
+			if (!chrome.storage || !chrome.storage.sync) {
+				callback(defaults);
+				return;
+			}
+
+			chrome.storage.sync.get(defaults, function(items) {
+				try {
+					if (!isExtensionContextValid()) {
+						callback(defaults);
+						return;
+					}
+
+					var runtimeError = null;
+					try {
+						runtimeError = chrome.runtime && chrome.runtime.lastError;
+					} catch (error) {
+						runtimeError = true;
+					}
+
+					if (runtimeError) {
+						callback(defaults);
+						return;
+					}
+
+					callback(items || defaults);
+				} catch (error) {
+					callback(defaults);
+				}
+			});
+		} catch (error) {
+			callback(defaults);
+		}
+	};
+
+	const safeStorageSet = function(values) {
+		if (!isExtensionContextValid()) {
+			return;
+		}
+
+		try {
+			if (!chrome.storage || !chrome.storage.sync) {
+				return;
+			}
+
+			chrome.storage.sync.set(values);
+		} catch (error) {
+			// Ignore invalidated context during extension reloads.
+		}
+	};
+
 	const applyOverlayColors = function(colors) {
 		document.documentElement.style.setProperty('--daylight-color', normalizeHexColor(colors.daylightColor, defaultColors.daylightColor));
 		document.documentElement.style.setProperty('--astronomical-twilight-color', normalizeHexColor(colors.astronomicalTwilightColor, defaultColors.astronomicalTwilightColor));
@@ -64,16 +132,56 @@
 		document.documentElement.style.setProperty('--golden-hour-color', normalizeHexColor(colors.goldenHourColor, defaultColors.goldenHourColor));
 	};
 
-	const loadOverlayColors = function() {
-		if (!chrome.storage || !chrome.storage.sync) {
-			applyOverlayColors(defaultColors);
+	const persistAutoLocation = function(lat, lon) {
+		if (manualLocationEnabled) {
 			return;
 		}
 
-		chrome.storage.sync.get({ [colorStorageKey]: defaultColors }, function(items) {
+		safeStorageGet({ [locationStorageKey]: null }, function(items) {
+			var current = items[locationStorageKey];
+			if (current && current.manual) {
+				return;
+			}
+
+			safeStorageSet({
+				[locationStorageKey]: {
+					manual: false,
+					lat: lat,
+					lon: lon,
+					updatedAt: Date.now()
+				}
+			});
+		});
+	};
+
+	const loadOverlayColors = function() {
+		safeStorageGet({ [colorStorageKey]: defaultColors }, function(items) {
 			var storedColors = items[colorStorageKey] || defaultColors;
 			applyOverlayColors(storedColors);
 		});
+	};
+
+	const clearPaintedOverlays = function() {
+		$('div.daylight').each(function() {
+			$(this).remove();
+		});
+	};
+
+	const applyLocation = function(lat, lon) {
+		if (typeof lat !== 'number' || typeof lon !== 'number' || isNaN(lat) || isNaN(lon)) {
+			return;
+		}
+
+		window.lat = lat;
+		window.lon = lon;
+		clearPaintedOverlays();
+	};
+
+	const stopGeolocationWatch = function() {
+		if (geolocationWatchId !== null && navigator.geolocation) {
+			navigator.geolocation.clearWatch(geolocationWatchId);
+			geolocationWatchId = null;
+		}
 	};
     
 
@@ -201,7 +309,9 @@
 		alertTbody.appendChild(alertRow);
 		alertTable.appendChild(alertTbody);
 		alertHead.appendChild(alertTable);
-		notifier.appendChild(alertHead);
+		if (notifier && notifier.length) {
+			notifier.append(alertHead);
+		}
 
 	};
 
@@ -211,9 +321,24 @@
 	};
 
 	function sendPopupMessage(messageText) {
-		chrome.runtime.sendMessage({greeting: messageText}, function(response) {
-	  		log("[daylight.js] Response from popup: " + response.farewell);
-		});
+		if (!isExtensionContextValid()) {
+			return;
+		}
+
+		try {
+			if (!chrome.runtime || !chrome.runtime.sendMessage) {
+				return;
+			}
+
+			chrome.runtime.sendMessage({greeting: messageText}, function(response) {
+		  		if (!isExtensionContextValid() || !response) {
+		  			return;
+		  		}
+		  		log("[daylight.js] Response from popup: " + response.farewell);
+			});
+		} catch (error) {
+			// Ignore invalidated context during extension reloads.
+		}
 	};
 
 	loadOverlayColors();
@@ -223,30 +348,82 @@
 		log("Adding message listener for the first time.")
 		window.alreadyListening = true;
 
-		chrome.runtime.onMessage.addListener(
-			function(request, sender, sendResponse) {
-				if (request && request.type === 'daylightColorsUpdated' && request.colors) {
-					applyOverlayColors(request.colors);
-					sendResponse({ status: 'ok' });
-					return;
-				}
+		if (isExtensionContextValid()) {
+			try {
+				if (chrome.runtime && chrome.runtime.onMessage) {
+					chrome.runtime.onMessage.addListener(
+						function(request, sender, sendResponse) {
+							if (request && request.type === 'daylightRequestCurrentLocation') {
+								if (!navigator.geolocation) {
+									sendResponse({ status: 'unavailable' });
+									return;
+								}
 
-				log("[daylight.js] Received message"
-					+ (sender.tab ? " from a content script: " + sender.tab.url : " from the extension: ")
-					+  request.greeting);
-				if (request.greeting == "hello") {
-					log("[daylight.js] Sending response: 'goodbye'");
-					sendResponse({farewell: "goodbye"});
+								navigator.geolocation.getCurrentPosition(function(position) {
+									showPosition(position);
+									sendResponse({
+										status: 'ok',
+										lat: position.coords.latitude,
+										lon: position.coords.longitude
+									});
+								}, function(error) {
+									if (error && error.code === 1) {
+										sendResponse({ status: 'permission-denied' });
+									} else {
+										sendResponse({ status: 'error' });
+									}
+								}, {
+									maximumAge: 60000,
+									timeout: 10000
+								});
+
+								return true;
+							}
+
+							if (request && request.type === 'daylightColorsUpdated' && request.colors) {
+								applyOverlayColors(request.colors);
+								sendResponse({ status: 'ok' });
+								return;
+							}
+
+							if (request && request.type === 'daylightLocationUpdated') {
+								if (request.location && request.location.manual && typeof request.location.lat === 'number' && typeof request.location.lon === 'number') {
+									manualLocationEnabled = true;
+									stopGeolocationWatch();
+									applyLocation(request.location.lat, request.location.lon);
+								} else {
+									manualLocationEnabled = false;
+									if (request.location && typeof request.location.lat === 'number' && typeof request.location.lon === 'number') {
+										applyLocation(request.location.lat, request.location.lon);
+									}
+									startGeolocationWatch();
+								}
+								sendResponse({ status: 'ok' });
+								return;
+							}
+
+							log("[daylight.js] Received message"
+								+ (sender.tab ? " from a content script: " + sender.tab.url : " from the extension: ")
+								+  request.greeting);
+							if (request.greeting == "hello") {
+								log("[daylight.js] Sending response: 'goodbye'");
+								sendResponse({farewell: "goodbye"});
+							}
+						}
+					);
 				}
+			} catch (error) {
+				// Ignore invalidated context during extension reloads.
 			}
-		);
+		}
 	} else {
 		log("Already listening... skipping.")
 	}
 
 	function showPosition(position) {
-		window.lat=position.coords.latitude;
-		window.lon=position.coords.longitude;
+		manualLocationEnabled = false;
+		applyLocation(position.coords.latitude, position.coords.longitude);
+		persistAutoLocation(position.coords.latitude, position.coords.longitude);
 	};
 
 	function errorHandler(error) {
@@ -278,10 +455,43 @@
 		}
 	};
 
-	if(navigator.geolocation) {
-		navigator.geolocation.getCurrentPosition(showPosition,errorHandler);
-	}
-	else {
+	const startGeolocationWatch = function() {
+		if (!navigator.geolocation || manualLocationEnabled) {
+			return;
+		}
+
+		navigator.geolocation.getCurrentPosition(showPosition, errorHandler, {
+			maximumAge: 60000,
+			timeout: 10000
+		});
+
+		if (geolocationWatchId === null) {
+			geolocationWatchId = navigator.geolocation.watchPosition(showPosition, errorHandler, {
+				enableHighAccuracy: false,
+				maximumAge: 60000,
+				timeout: 15000
+			});
+		}
+	};
+
+	if (isExtensionContextValid() && chrome.storage && chrome.storage.sync) {
+		safeStorageGet({ [locationStorageKey]: null }, function(items) {
+			const loc = items[locationStorageKey];
+			if (loc && loc.manual && typeof loc.lat === 'number' && typeof loc.lon === 'number') {
+				manualLocationEnabled = true;
+				stopGeolocationWatch();
+				applyLocation(loc.lat, loc.lon);
+			} else {
+				manualLocationEnabled = false;
+				if (loc && typeof loc.lat === 'number' && typeof loc.lon === 'number') {
+					applyLocation(loc.lat, loc.lon);
+				}
+				startGeolocationWatch();
+			}
+		});
+	} else if (navigator.geolocation) {
+		startGeolocationWatch();
+	} else {
 		message = "Daylight: Sorry, your browser does not support geolocation services.";
 		log(message);
 		alertMessage(message);
@@ -305,14 +515,24 @@
     	if (window.jQuery) {
 			try {
 
+			// Skip non-grid routes where daylight overlays are not relevant.
+			if (window.location && /\/eventedit|\/settings|\/tasks/.test(window.location.pathname)) {
+				lastScrapeError = null;
+				return;
+			}
+
 			// Get the displayed year from the calendar header near the visible grid table.
 			var yearText = '';
-			var calendarTable = requireScrapedValue('calendar grid table', document.querySelector('table[role="grid"]'));
-			var tableHeader = requireScrapedValue('calendar table header container', calendarTable.previousElementSibling);
+			var calendarTable = document.querySelector('table[role="grid"]');
+			if (!calendarTable) {
+				lastScrapeError = null;
+				return;
+			}
+			var tableHeader = calendarTable.previousElementSibling;
 			if (tableHeader) {
 				var headerSpans = tableHeader.querySelectorAll('span');
 				for (var s = 0; s < headerSpans.length; s++) {
-					var spanNode = requireScrapedValue('header span at index ' + s, headerSpans[s]);
+					var spanNode = headerSpans[s];
 					var spanText = (spanNode.textContent || '').trim();
 					if (/\b\d{4}\b/.test(spanText)) {
 						yearText = spanText;
@@ -335,12 +555,18 @@
 
 			// Get the "days" columns
 			var days = $('div[role="columnheader"]');
-			requireScrapedValue('first day column header', days.get(0));
+			if (!days || days.length === 0) {
+				lastScrapeError = null;
+				return;
+			}
 			// console.log(`Number of day columns: ${days.length}`);
 			
 			// Get the date for each day column
 			var dates = days.children('h2');
-			requireScrapedValue('first date heading under day column', dates.get(0));
+			if (!dates || dates.length === 0) {
+				lastScrapeError = null;
+				return;
+			}
 			// console.log(`Number of date columns: ${dates.length}`);
 
 			// Target cells where daylight overlays should be inserted.
@@ -348,20 +574,30 @@
 				var columnIndex = $(this).attr('data-column-index');
 				return columnIndex !== null && columnIndex !== 'null';
 			});
-			requireScrapedValue('first target grid cell', dayGridCells.get(0));
+			if (!dayGridCells || dayGridCells.length === 0) {
+				lastScrapeError = null;
+				return;
+			}
 			// console.log(`Number of target grid cells: ${dayGridCells.length}`);
 			
 			// Add the daylight highlighters
 			var alreadypainted = $('div .daylight');
+			var expectedOverlayCount = days.length;
 			// console.log(`Number of already painted daylight highlighters: ${alreadypainted.length}`);
 
-			if ( alreadypainted.length < 7 && window.lat != 0 && window.lon != 0) {
+			if (alreadypainted.length < expectedOverlayCount && window.lat != 0 && window.lon != 0) {
 				group(`Adding daylight highlighters...`);
-				for (i = 0; i <= days.length - 1; i++) {
+				for (var i = 0; i <= days.length - 1; i++) {
 					// Get oriented on where things are in the Calendar page
-					var dateHeading = requireScrapedValue('date heading for day index ' + i, dates[i]);
-					var targetGridCell = requireScrapedValue('target grid cell for day index ' + i, dayGridCells.get(i));
-					var rawDateLabel = requireScrapedValue('aria-label for day index ' + i, $(dateHeading).attr("aria-label"));
+					var dateHeading = dates[i];
+					var targetGridCell = dayGridCells.get(i);
+					if (!dateHeading || !targetGridCell) {
+						continue;
+					}
+					var rawDateLabel = $(dateHeading).attr("aria-label");
+					if (!rawDateLabel) {
+						continue;
+					}
 					
 					// Format the date found on the page into something that SunCalc can understand.
 					var date = rawDateLabel.replace(/,\s*today\s*$/i, '').trim();

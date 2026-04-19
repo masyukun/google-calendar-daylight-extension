@@ -10,11 +10,11 @@
       <img src="icon48.png" width="32" height="32" />
       <span class="daylightTitle">Daylight</span>
     </span>
-    
+    <div id="mainPanel">
       <table id="options" width="100%">
         <tr>
             <td> &nbsp; </td>
-            <td align="right">v 1.1.0</td>
+          <td align="right">v 1.1.0</td>
         </tr>
 <!--
         <tr>
@@ -35,6 +35,35 @@
         </tr>
         <tr>
           <td colspan="2"><hr></td>
+        </tr>
+        <tr>
+          <td>
+            <button id="toggleHistory" class="iconButton locationHistoryButton" title="Location history" aria-label="Location history">H</button>
+            <b>Location</b>
+          </td>
+          <td align="right" id="locationStatus" class="locationStatus">loading...</td>
+        </tr>
+        <tr>
+          <td>Latitude</td>
+          <td align="right"><input id="latInput" type="number" min="-90" max="90" step="0.0001" placeholder="auto"></td>
+        </tr>
+        <tr>
+          <td>Longitude</td>
+          <td align="right"><input id="lonInput" type="number" min="-180" max="180" step="0.0001" placeholder="auto"></td>
+        </tr>
+        <tr>
+          <td colspan="2" style="text-align:center; padding-top: 8px;">
+            <button id="saveLocation">Save Location</button>
+            <button id="autoLocation">Reset to Default</button>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2" style="text-align:center; padding-top: 4px;">
+            <button id="retryGeolocation">Retry Geolocation Permission</button>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2" style="text-align:center;"><span id="locationSaveStatus"></span></td>
         </tr>
         <tr>
           <td><b>Daylight</b></td>
@@ -70,7 +99,16 @@
           <td colspan="2" style="text-align:center;"><span id="saveStatus"></span></td>
         </tr>
       </table>
-      
+    </div>
+
+    <div id="historyPanel" style="display:none;">
+      <div class="historyHeaderRow">
+        <span class="historyTitle">Location History</span>
+        <button id="closeHistory" class="iconButton" aria-label="Close history">X</button>
+      </div>
+      <ul id="locationHistoryList"></ul>
+      <div id="historyEmptyState" class="historyEmpty">No location history yet.</div>
+    </div>
   </body>
 </html>
 

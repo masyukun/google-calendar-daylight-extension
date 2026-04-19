@@ -13,6 +13,27 @@ span#header {
     text-align: center;
 }
 
+#mainPanel, #historyPanel {
+    width: 100%;
+}
+
+.iconButton {
+    margin-left: 8px;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    line-height: 24px;
+    text-align: center;
+    border-radius: 50%;
+    font-weight: bold;
+}
+
+.locationHistoryButton {
+    margin-left: 0;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
 .daylightTitle {
     font-family: sans-serif;
     font-size: 30px;
@@ -61,6 +82,15 @@ input[type='color'] {
     padding: 0;
 }
 
+input[type='number'] {
+    width: 80px;
+    border: 0;
+    padding: 3px 5px;
+    background: rgba(255,255,255,0.3);
+    color: #ffffdd;
+    text-align: right;
+}
+
 button {
     margin: 0 4px;
     border: 1px solid rgba(255,255,255,0.6);
@@ -103,3 +133,88 @@ a:active {
    color: #fbfeb1;
     text-decoration: line-through;
  }
+
+.locationStatus {
+    font-size: 11px;
+    color: #aaddff;
+    cursor: pointer;
+}
+
+.locationNameInput {
+    width: 120px;
+    border: 0;
+    padding: 3px 5px;
+    background: rgba(255,255,255,0.3);
+    color: #ffffdd;
+    margin-right: 4px;
+}
+
+.inlineActionButton {
+    margin: 0 2px;
+    padding: 2px 5px;
+    font-size: 10px;
+}
+
+#locationSaveStatus {
+    color: #fbfeb1;
+    font-size: 11px;
+}
+
+.historyHeaderRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 6px 4px;
+}
+
+.historyTitle {
+    font-size: 14px;
+    font-weight: bold;
+    color: #ffffdd;
+}
+
+#locationHistoryList {
+    list-style: none;
+    margin: 0;
+    padding: 0 4px;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.historyItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.historyCity {
+    color: #ffffdd;
+    font-size: 12px;
+}
+
+.historyCoords {
+    color: #c8d9ff;
+    font-size: 10px;
+}
+
+.historyDelete {
+    visibility: hidden;
+    width: 20px;
+    height: 20px;
+    margin-left: 8px;
+    padding: 0;
+    line-height: 18px;
+    border-radius: 50%;
+}
+
+.historyItem:hover .historyDelete {
+    visibility: visible;
+}
+
+.historyEmpty {
+    margin: 8px;
+    color: #c8d9ff;
+    font-size: 11px;
+}
