@@ -183,9 +183,37 @@
 			geolocationWatchId = null;
 		}
 	};
+
+	const getGridMaxPixels = function(dayGridCells) {
+		var fallbackPixels = 960;
+
+		if (!dayGridCells || dayGridCells.length === 0) {
+			return fallbackPixels;
+		}
+
+		var measuredMax = 0;
+		dayGridCells.each(function() {
+			var height = 0;
+			if (this && this.getBoundingClientRect) {
+				height = this.getBoundingClientRect().height;
+			} else if (this && typeof this.clientHeight === 'number') {
+				height = this.clientHeight;
+			}
+
+			if (height > measuredMax) {
+				measuredMax = height;
+			}
+		});
+
+		if (!isFinite(measuredMax) || measuredMax <= 0) {
+			return fallbackPixels;
+		}
+
+		return Math.round(measuredMax);
+	};
     
 
-	const makeHighlighter = function(daylightPeriods) {
+	const makeHighlighter = function(daylightPeriods, maxPixels) {
 		var periodColorMap = {
 			'morningAstronomicalTwilight': 'astronomical-twilight',
 			'morningNauticalTwilight':     'nautical-twilight',
@@ -222,8 +250,8 @@
 			var att4 = document.createAttribute("class");
 			att4.value = `tg-${coloration}-marker`;
 			var att5 = document.createAttribute("style");
-			att5.value = "top: " + timeToPixels(period.start) + "px; ";
-			att5.value += "height: " + (timeToPixels(period.end) - timeToPixels(period.start)) + "px; ";
+			att5.value = "top: " + timeToPixels(period.start, maxPixels) + "px; ";
+			att5.value += "height: " + (timeToPixels(period.end, maxPixels) - timeToPixels(period.start, maxPixels)) + "px; ";
 				log(`${coloration}-marker => ${att5.value}`);
 
 			daylightHighlighter.setAttributeNode(att3);
@@ -238,8 +266,10 @@
 	};
 
 	/** theTime should be in 24 hour format: 0000 to 2399 */
-	const timeToPixels = function(theTime) {
-		var maxPixels = 960; // Changed from original of 1008;
+	const timeToPixels = function(theTime, maxPixels) {
+		if (typeof maxPixels !== "number" || !isFinite(maxPixels) || maxPixels <= 0) {
+			maxPixels = 960;
+		}
 		var maxTime = 2399;
 
 		// Type-checking, reverts to 0 mark
@@ -579,6 +609,7 @@
 				return;
 			}
 			// console.log(`Number of target grid cells: ${dayGridCells.length}`);
+			var gridMaxPixels = getGridMaxPixels(dayGridCells);
 			
 			// Add the daylight highlighters
 			var alreadypainted = $('div .daylight');
@@ -672,7 +703,7 @@
 					 "eveningAstronomicalTwilight": {"start": nauticalDusk,	"end": night}
 					}
 					targetGridCell.insertBefore(
-						makeHighlighter(daylightPeriods),
+						makeHighlighter(daylightPeriods, gridMaxPixels),
 						targetGridCell.firstChild);
 						log(`Added daylight highlighter for day ${i}`);
 				}
