@@ -27,7 +27,7 @@
     }
   ],
   "homepage_url": "https://github.com/masyukun/google-calendar-daylight-extension",
-  "permissions": ["activeTab", "storage"],
+  "permissions": ["activeTab", "storage", "geolocation"],
   "host_permissions": [
     "https://calendar.google.com/calendar/*",
     "https://www.google.com/calendar/*",
