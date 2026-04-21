@@ -21,8 +21,6 @@
     border-bottom: 1px solid var(--daylight-color); 
     background-color: var(--daylight-color); 
     opacity: 0.5; 
-    transition: opacity 0.5s ease-in-out;
-    animation: daylightFadeIn 0.5s ease-in-out;
 }
 
 .tg-daylight-marker.is-removing,
@@ -32,24 +30,6 @@
 .tg-sunrise-sunset-marker.is-removing,
 .tg-golden-hour-marker.is-removing {
     opacity: 0;
-}
-
-@keyframes daylightFadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 0.5;
-    }
-}
-
-@keyframes twilightFadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 0.1;
-    }
 }
 
 .tg-astronomical-twilight-marker {
@@ -65,8 +45,6 @@
     border-bottom: 1px solid var(--astronomical-twilight-color);
     background-color: var(--astronomical-twilight-color);
     opacity: 0.1;
-    transition: opacity 0.1s ease-in-out;
-    animation: twilightFadeIn 0.1s ease-in-out;
 }
 
 .tg-nautical-twilight-marker {
@@ -82,8 +60,6 @@
     border-bottom: 1px solid var(--nautical-twilight-color);
     background-color: var(--nautical-twilight-color);
     opacity: 0.1;
-    transition: opacity 0.1s ease-in-out;
-    animation: twilightFadeIn 0.1s ease-in-out;
 }
 
 .tg-civil-twilight-marker {
@@ -99,8 +75,6 @@
     border-bottom: 1px solid var(--civil-twilight-color);
     background-color: var(--civil-twilight-color);
     opacity: 0.1;
-    transition: opacity 0.1s ease-in-out;
-    animation: twilightFadeIn 0.1s ease-in-out;
 }
 
 .tg-sunrise-sunset-marker {
@@ -116,8 +90,6 @@
     border-bottom: 1px solid var(--sunrise-sunset-color);
     background-color: var(--sunrise-sunset-color);
     opacity: 0.5;
-    transition: opacity 0.5s ease-in-out;
-    animation: daylightFadeIn 0.5s ease-in-out;
 }
 
 .tg-golden-hour-marker {
@@ -133,7 +105,5 @@
     border-bottom: 1px solid var(--golden-hour-color);
     background-color: var(--golden-hour-color);
     opacity: 0.5;
-    transition: opacity 0.5s ease-in-out;
-    animation: daylightFadeIn 0.5s ease-in-out;
 }
 
