@@ -1,3 +1,9 @@
+html,
+body {
+    min-width: max-content;
+    max-width: max-content;
+}
+
 body {
     background-image: url('popupbg.jpg');
     background-color: #3333AA;
@@ -41,14 +47,78 @@ span#header {
     vertical-align: bottom;
 }
 
-table#options {
+.optionsTable {
     font-family: sans-serif;
     color: #ffffdd;
     font-size: small;
 }
 
-table#options td {
+.optionsTable td {
     padding: 2px 4px;
+}
+
+.metaRow {
+    display: flex;
+    justify-content: space-between;
+    color: #ffffdd;
+    font-family: sans-serif;
+    font-size: small;
+    padding: 2px 4px;
+}
+
+.versionTrigger {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #fbfeb1;
+    font-family: inherit;
+    font-size: inherit;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.versionInline {
+    display: inline;
+}
+
+.calendarLinkRow {
+    text-align: center;
+    padding: 8px 0 4px;
+}
+
+.patronBadgeButton {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+
+.paneTabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 8px 4px 4px;
+}
+
+.paneTab {
+    flex: 1 1 calc(50% - 6px);
+    min-width: 120px;
+    margin: 0;
+}
+
+.paneTab.is-active {
+    background: rgba(255,255,255,0.3);
+    border-color: rgba(255,255,255,0.9);
+}
+
+.settingsPane {
+    display: none;
+}
+
+.settingsPane.is-active {
+    display: block;
 }
 
 input[type=text]{
@@ -58,6 +128,7 @@ input[type=text]{
 }
 
 input[type='range'] {
+    appearance: none;
     -webkit-appearance: none;
     border-radius: 5px;
     box-shadow:  0 0 5px rgba(0,0,0,0.3);
@@ -66,6 +137,7 @@ input[type='range'] {
     vertical-align: middle;
 }
 input[type='range']::-webkit-slider-thumb {
+    appearance: none;
     -webkit-appearance: none;
     border-radius: 10px;
     background-color: #FFF;
@@ -217,4 +289,79 @@ a:active {
     margin: 8px;
     color: #c8d9ff;
     font-size: 11px;
+}
+
+.aboutSection {
+    display: flex;
+    flex-direction: column;
+    margin: 8px 6px;
+    font-family: sans-serif;
+    color: #ffffdd;
+    max-width: 340px;
+    box-sizing: border-box;
+}
+
+.aboutTitle {
+    font-size: 15px;
+    font-weight: bold;
+    margin-bottom: 6px;
+}
+
+.aboutText {
+    font-size: 12px;
+    line-height: 1.4;
+    margin-bottom: 6px;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+}
+
+.aboutLinks {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.supportSection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    text-align: center;
+    color: #ffffdd;
+    font-size: 12px;
+}
+
+.releaseNotesPane {
+    display: none;
+    margin-top: 10px;
+    width: min(340px, 100%);
+    max-width: 340px;
+    padding: 8px;
+    border: 1px solid rgba(255,255,255,0.35);
+    background: rgba(0,0,0,0.2);
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.releaseNotesPane.is-visible {
+    display: block;
+}
+
+.releaseNotesTitle {
+    font-size: 13px;
+    font-weight: bold;
+    margin-bottom: 6px;
+}
+
+.releaseNotesContent {
+    max-height: 170px;
+    overflow-y: auto;
+    font-size: 11px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    color: #ffffdd;
 }

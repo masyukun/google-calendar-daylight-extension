@@ -1,9 +1,11 @@
 const COLOR_STORAGE_KEY = 'daylightColorSettings';
 const LOCATION_STORAGE_KEY = 'daylightLocationSettings';
 const LOCATION_HISTORY_KEY = 'daylightLocationHistory';
+const HISTORY_VISIBILITY_KEY = 'daylightHistoryVisibility';
 const GEOCODE_CACHE = {};
 let locationStatusRequestId = 0;
 let isLocationStatusEditing = false;
+let releaseNotesLoaded = false;
 
 const DEFAULT_COLORS = {
     daylightColor: '#FFFFCC',
@@ -21,13 +23,6 @@ function normalizeHexColor(value, fallback) {
     return fallback;
 }
 
-function setStatus(message) {
-    const statusNode = document.getElementById('saveStatus');
-    if (statusNode) {
-        statusNode.textContent = message;
-    }
-}
-
 function setLocationStatus(message) {
     const node = document.getElementById('locationStatus');
     if (node && !isLocationStatusEditing) node.textContent = message;
@@ -39,11 +34,121 @@ function setLocationSaveStatus(message) {
 }
 
 function setHistoryPanelVisible(visible) {
-    const mainPanel = document.getElementById('mainPanel');
     const historyPanel = document.getElementById('historyPanel');
-    if (!mainPanel || !historyPanel) return;
-    mainPanel.style.display = visible ? 'none' : 'block';
+    if (!historyPanel) return;
     historyPanel.style.display = visible ? 'block' : 'none';
+    chrome.storage.sync.set({ [HISTORY_VISIBILITY_KEY]: visible });
+}
+
+function loadHistoryVisibility(callback) {
+    chrome.storage.sync.get({ [HISTORY_VISIBILITY_KEY]: true }, function(items) {
+        callback(items[HISTORY_VISIBILITY_KEY]);
+    });
+}
+
+function setActiveSettingsPane(paneId) {
+    const tabs = document.querySelectorAll('.paneTab');
+    const panes = document.querySelectorAll('.settingsPane');
+    const activeElement = document.activeElement;
+    const targetTab = document.querySelector('.paneTab[data-pane="' + paneId + '"]');
+
+    // Move focus before hiding panes so focused descendants are never aria-hidden.
+    if (activeElement && activeElement !== document.body) {
+        const isInsidePane = Array.from(panes).some(function(pane) {
+            return pane.contains(activeElement);
+        });
+
+        if (isInsidePane) {
+            if (targetTab && typeof targetTab.focus === 'function') {
+                targetTab.focus();
+            } else if (typeof activeElement.blur === 'function') {
+                activeElement.blur();
+            }
+        }
+    }
+
+    panes.forEach(function(pane) {
+        const isActive = pane.id === paneId;
+        pane.classList.toggle('is-active', isActive);
+        pane.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+        pane.inert = !isActive;
+    });
+
+    tabs.forEach(function(tab) {
+        const isActive = tab.getAttribute('data-pane') === paneId;
+        tab.classList.toggle('is-active', isActive);
+        tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    });
+}
+
+function getCurrentVersion() {
+    try {
+        const manifest = chrome.runtime.getManifest();
+        return manifest && manifest.version ? manifest.version : '1.2.2';
+    } catch (error) {
+        return '1.2.2';
+    }
+}
+
+function setVersionLabels(version) {
+    const headerVersion = document.getElementById('headerVersion');
+    const aboutVersion = document.getElementById('aboutVersion');
+
+    if (headerVersion) {
+        headerVersion.textContent = 'v ' + version;
+    }
+
+    if (aboutVersion) {
+        aboutVersion.textContent = version;
+    }
+}
+
+function formatReleaseNotesMarkdown(markdown) {
+    return (markdown || '').trim();
+}
+
+function loadCurrentReleaseNotes() {
+    if (releaseNotesLoaded) {
+        return;
+    }
+
+    const contentNode = document.getElementById('releaseNotesContent');
+    if (!contentNode) {
+        return;
+    }
+
+    const version = getCurrentVersion();
+    const notesFile = 'RELEASE_NOTES_' + version + '.md';
+    const notesUrl = chrome.runtime.getURL(notesFile);
+
+    fetch(notesUrl)
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error('Release notes not found');
+            }
+            return response.text();
+        })
+        .then(function(markdown) {
+            contentNode.textContent = formatReleaseNotesMarkdown(markdown);
+            releaseNotesLoaded = true;
+        })
+        .catch(function() {
+            contentNode.textContent = 'Release notes are not available for version ' + version + '. Visit Full Release History for all releases.';
+            releaseNotesLoaded = true;
+        });
+}
+
+function showReleaseNotesPane() {
+    setActiveSettingsPane('aboutPane');
+
+    const pane = document.getElementById('releaseNotesPane');
+    if (!pane) {
+        return;
+    }
+
+    pane.classList.add('is-visible');
+    pane.setAttribute('aria-hidden', 'false');
+    loadCurrentReleaseNotes();
 }
 
 function setRetryButtonVisible(visible) {
@@ -297,7 +402,6 @@ function applyCurrentLocationFromHistory(item) {
         setResetButtonVisible(true);
         setRetryButtonVisible(false);
         notifyActiveCalendarTabLocation(location);
-        setHistoryPanelVisible(false);
     });
 }
 
@@ -530,25 +634,40 @@ function saveColors() {
     const colors = getCurrentFormColors();
     chrome.storage.sync.set({ [COLOR_STORAGE_KEY]: colors }, function() {
         if (chrome.runtime.lastError) {
-            setStatus('Save failed');
             return;
         }
-
-        setStatus('Saved');
         notifyActiveCalendarTab(colors);
     });
+}
+
+function autoSaveColors(event) {
+    if (event && event.target) {
+        event.target.value = normalizeHexColor(event.target.value, event.target.value);
+    }
+    saveColors();
+    updateResetButtonVisibility();
+}
+
+function updateResetButtonVisibility() {
+    const resetButton = document.getElementById('resetColors');
+    if (!resetButton) return;
+    
+    const currentColors = getCurrentFormColors();
+    const colorsChanged = Object.keys(DEFAULT_COLORS).some(function(key) {
+        return currentColors[key] !== DEFAULT_COLORS[key];
+    });
+    
+    resetButton.style.display = colorsChanged ? 'inline-block' : 'none';
 }
 
 function resetColors() {
     applyColorsToForm(DEFAULT_COLORS);
     chrome.storage.sync.set({ [COLOR_STORAGE_KEY]: DEFAULT_COLORS }, function() {
         if (chrome.runtime.lastError) {
-            setStatus('Reset failed');
             return;
         }
-
-        setStatus('Reset to defaults');
         notifyActiveCalendarTab(DEFAULT_COLORS);
+        updateResetButtonVisibility();
     });
 }
 
@@ -565,7 +684,6 @@ function loadColors() {
         };
 
         applyColorsToForm(normalizedColors);
-        setStatus('');
     });
 }
 
@@ -683,16 +801,50 @@ function loadLocation() {
 }
 
 window.addEventListener('load', function() {
+    const currentVersion = getCurrentVersion();
+    setVersionLabels(currentVersion);
+
     setResetButtonVisible(false);
     setRetryButtonVisible(false);
-    setHistoryPanelVisible(false);
+    setActiveSettingsPane('locationPane');
     loadColors();
 
-    document.getElementById('saveColors').addEventListener('click', saveColors);
-    document.getElementById('resetColors').addEventListener('click', resetColors);
+    loadHistoryVisibility(function(isVisible) {
+        setHistoryPanelVisible(isVisible);
+    });
+
+    document.querySelectorAll('.paneTab').forEach(function(tab) {
+        tab.addEventListener('click', function() {
+            const paneId = tab.getAttribute('data-pane');
+            if (paneId) {
+                setActiveSettingsPane(paneId);
+            }
+        });
+    });
+
 
     loadLocation();
     renderLocationHistory();
+    updateResetButtonVisibility();
+    
+    // Auto-save color changes
+    const colorInputIds = [
+        'daylightColor',
+        'astronomicalTwilightColor',
+        'nauticalTwilightColor',
+        'civilTwilightColor',
+        'sunriseSunsetColor',
+        'goldenHourColor'
+    ];
+    
+    colorInputIds.forEach(function(colorId) {
+        const input = document.getElementById(colorId);
+        if (input) {
+            input.addEventListener('change', autoSaveColors);
+        }
+    });
+
+    document.getElementById('resetColors').addEventListener('click', resetColors);
     document.getElementById('saveLocation').addEventListener('click', saveLocation);
     document.getElementById('autoLocation').addEventListener('click', useAutoLocation);
     document.getElementById('retryGeolocation').addEventListener('click', retryGeolocationPermission);
@@ -706,7 +858,17 @@ window.addEventListener('load', function() {
         renderLocationHistory();
     });
 
+    document.getElementById('patronBadgeTrigger').addEventListener('click', function() {
+        setActiveSettingsPane('aboutPane');
+    });
+
     document.getElementById('closeHistory').addEventListener('click', function() {
         setHistoryPanelVisible(false);
+    });
+
+    document.querySelectorAll('.versionTrigger').forEach(function(versionNode) {
+        versionNode.addEventListener('click', function() {
+            showReleaseNotesPane();
+        });
     });
 });

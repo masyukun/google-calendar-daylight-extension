@@ -11,103 +11,125 @@
       <span class="daylightTitle">Daylight</span>
     </span>
     <div id="mainPanel">
-      <table id="options" width="100%">
-        <tr>
-            <td> &nbsp; </td>
-          <td align="right">v 1.2.1</td>
-        </tr>
-<!--
-        <tr>
-            <td><b>Location</b></td>
-            <td><input id="geoControl" type="text" value="N/A" ></input></td>
-        </tr>
-        <tr>
-            <td><b>Opacity</b></td>
-            <td><input id="opacityControl" type="range" min="0.1" max="1.0" step="0.05" value="0.5"></input></td>
-        </tr>
-        <tr>
-            <td></td>
-            <td><button id="clickMe">Apply</button></td>
-        </tr>
--->
-        <tr>
-            <td colspan="2" style="text-align: center;"><p></p><a href="https://calendar.google.com/calendar" target="_blank" rel="noopener noreferrer">Open Google Calendar</a></td>
-        </tr>
-        <tr>
-          <td colspan="2"><hr></td>
-        </tr>
-        <tr>
-          <td>
-            <button id="toggleHistory" class="iconButton locationHistoryButton" title="Location history" aria-label="Location history">H</button>
-            <b>Location</b>
-          </td>
-          <td align="right" id="locationStatus" class="locationStatus">loading...</td>
-        </tr>
-        <tr>
-          <td>Latitude</td>
-          <td align="right"><input id="latInput" type="number" min="-90" max="90" step="0.0001" placeholder="auto"></td>
-        </tr>
-        <tr>
-          <td>Longitude</td>
-          <td align="right"><input id="lonInput" type="number" min="-180" max="180" step="0.0001" placeholder="auto"></td>
-        </tr>
-        <tr>
-          <td colspan="2" style="text-align:center; padding-top: 8px;">
-            <button id="saveLocation">Save Location</button>
-            <button id="autoLocation">Reset to Default</button>
-          </td>
-        </tr>
-        <tr>
-          <td colspan="2" style="text-align:center; padding-top: 4px;">
-            <button id="retryGeolocation">Retry Geolocation Permission</button>
-          </td>
-        </tr>
-        <tr>
-          <td colspan="2" style="text-align:center;"><span id="locationSaveStatus"></span></td>
-        </tr>
-        <tr>
-          <td><b>Daylight</b></td>
-          <td align="right"><input id="daylightColor" type="color"></td>
-        </tr>
-        <tr>
-          <td><b>Astronomical twilight</b></td>
-          <td align="right"><input id="astronomicalTwilightColor" type="color"></td>
-        </tr>
-        <tr>
-          <td><b>Nautical twilight</b></td>
-          <td align="right"><input id="nauticalTwilightColor" type="color"></td>
-        </tr>
-        <tr>
-          <td><b>Civil twilight</b></td>
-          <td align="right"><input id="civilTwilightColor" type="color"></td>
-        </tr>
-        <tr>
-          <td><b>Sunrise/Sunset</b></td>
-          <td align="right"><input id="sunriseSunsetColor" type="color"></td>
-        </tr>
-        <tr>
-          <td><b>Golden hour</b></td>
-          <td align="right"><input id="goldenHourColor" type="color"></td>
-        </tr>
-        <tr>
-          <td colspan="2" style="text-align:center; padding-top: 8px;">
-            <button id="saveColors">Save Colors</button>
-            <button id="resetColors">Reset</button>
-          </td>
-        </tr>
-        <tr>
-          <td colspan="2" style="text-align:center;"><span id="saveStatus"></span></td>
-        </tr>
-      </table>
-    </div>
-
-    <div id="historyPanel" style="display:none;">
-      <div class="historyHeaderRow">
-        <span class="historyTitle">Location History</span>
-        <button id="closeHistory" class="iconButton" aria-label="Close history">X</button>
+      <div class="metaRow">
+        <span>&nbsp;</span>
+        <button id="headerVersion" class="versionTrigger" type="button" aria-label="Open release notes">v 1.2.2</button>
       </div>
-      <ul id="locationHistoryList"></ul>
-      <div id="historyEmptyState" class="historyEmpty">No location history yet.</div>
+      <div class="calendarLinkRow">
+        <button id="patronBadgeTrigger" class="patronBadgeButton" type="button" aria-label="Open About tab">
+          <img src="https://img.shields.io/liberapay/patrons/masyukun.svg?logo=liberapay" alt="Liberapay patrons badge">
+        </button>
+      </div>
+      <hr>
+
+      <div class="paneTabs" role="tablist" aria-label="Popup settings sections">
+        <button id="locationTab" class="paneTab is-active" data-pane="locationPane" role="tab" aria-controls="locationPane" aria-selected="true">Location</button>
+        <button id="colorsTab" class="paneTab" data-pane="colorsPane" role="tab" aria-controls="colorsPane" aria-selected="false">Daylight Colors</button>
+        <button id="aboutTab" class="paneTab" data-pane="aboutPane" role="tab" aria-controls="aboutPane" aria-selected="false">About</button>
+      </div>
+
+      <div id="locationPane" class="settingsPane is-active" role="tabpanel" aria-labelledby="locationTab">
+        <table class="optionsTable" width="100%">
+          <tr>
+            <td>
+              <button id="toggleHistory" class="iconButton locationHistoryButton" title="Location history" aria-label="Location history">H</button>
+              <b>Location</b>
+            </td>
+            <td align="right" id="locationStatus" class="locationStatus">loading...</td>
+          </tr>
+          <tr>
+            <td>Latitude</td>
+            <td align="right"><input id="latInput" type="number" min="-90" max="90" step="0.0001" placeholder="auto"></td>
+          </tr>
+          <tr>
+            <td>Longitude</td>
+            <td align="right"><input id="lonInput" type="number" min="-180" max="180" step="0.0001" placeholder="auto"></td>
+          </tr>
+          <tr>
+            <td colspan="2" style="text-align:center; padding-top: 8px;">
+              <button id="saveLocation">Save Location</button>
+              <button id="autoLocation">Reset to Default</button>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2" style="text-align:center; padding-top: 4px;">
+              <button id="retryGeolocation">Retry Geolocation Permission</button>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2" style="text-align:center;"><span id="locationSaveStatus"></span></td>
+          </tr>
+        </table>
+
+        <div id="historyPanel">
+          <div class="historyHeaderRow">
+            <span class="historyTitle">Location History</span>
+            <button id="closeHistory" class="iconButton" aria-label="Close history">X</button>
+          </div>
+          <ul id="locationHistoryList"></ul>
+          <div id="historyEmptyState" class="historyEmpty">No location history yet.</div>
+        </div>
+      </div>
+
+      <div id="colorsPane" class="settingsPane" role="tabpanel" aria-labelledby="colorsTab" aria-hidden="true">
+        <table class="optionsTable" width="100%">
+          <tr>
+            <td><b>Daylight</b></td>
+            <td align="right"><input id="daylightColor" type="color"></td>
+          </tr>
+          <tr>
+            <td><b>Astronomical twilight</b></td>
+            <td align="right"><input id="astronomicalTwilightColor" type="color"></td>
+          </tr>
+          <tr>
+            <td><b>Nautical twilight</b></td>
+            <td align="right"><input id="nauticalTwilightColor" type="color"></td>
+          </tr>
+          <tr>
+            <td><b>Civil twilight</b></td>
+            <td align="right"><input id="civilTwilightColor" type="color"></td>
+          </tr>
+          <tr>
+            <td><b>Sunrise/Sunset</b></td>
+            <td align="right"><input id="sunriseSunsetColor" type="color"></td>
+          </tr>
+          <tr>
+            <td><b>Golden hour</b></td>
+            <td align="right"><input id="goldenHourColor" type="color"></td>
+          </tr>
+          <tr>
+            <td colspan="2" style="text-align:center; padding-top: 8px;">
+              <button id="resetColors" style="display:none;">Reset to Defaults</button>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+
+      <div id="aboutPane" class="settingsPane" role="tabpanel" aria-labelledby="aboutTab" aria-hidden="true">
+        <div class="aboutSection">
+          <div class="aboutTitle">Google Calendar Daylight</div>
+          <div class="aboutText">Shades your calendar background based on local daylight phases and your configured location.</div>
+          <div class="aboutText">
+            Version <button id="aboutVersion" class="versionTrigger versionInline" type="button" aria-label="Open release notes">1.2.2</button> 
+            <a href="https://github.com/masyukun/google-calendar-daylight-extension/releases" target="_blank" rel="noopener noreferrer">Full Release History</a>
+          </div>
+
+          <div id="releaseNotesPane" class="releaseNotesPane" aria-hidden="true">
+            <div class="releaseNotesTitle">Release Notes</div>
+            <div id="releaseNotesContent" class="releaseNotesContent">Loading release notes...</div>
+          </div>
+
+          <div class="aboutLinks">
+            <a href="https://github.com/masyukun/google-calendar-daylight-extension" target="_blank" rel="noopener noreferrer">View Source</a>
+          </div>
+
+          <div class="supportSection">
+              <a href="https://liberapay.com/masyukun/donate" target="_blank" rel="noopener noreferrer"><img alt="Donate using Liberapay" src="https://liberapay.com/assets/widgets/donate.svg"></a>
+              Become a Daylight Patron
+          </div>
+        </div>
+      </div>
     </div>
   </body>
 </html>
