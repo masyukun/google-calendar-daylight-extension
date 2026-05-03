@@ -6,7 +6,7 @@ Chrome Extension that overlays daylight hours in Google Calendar based on your c
 This project targets the current Google Calendar web host at https://calendar.google.com/calendar.
 
 You can install the extension from the Chrome Web Store at:
-https://chrome.google.com/webstore/detail/daylight-for-google-calen/iekoigdlnhmafemfoamlnmhihmcfcklk?hl=en
+https://chromewebstore.google.com/detail/daylight-for-google-calen/ajlfbbpkookboofaigplpmibnngiaadi?hl=en
 
 Release Highlights (v1.2.2)
 ---------------------------
