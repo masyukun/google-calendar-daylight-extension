@@ -18,10 +18,22 @@ Release Highlights (v1.2.0)
 - Expanded overlays from a single daylight block to multiple solar phases (astronomical, nautical, civil twilight, sunrise/sunset, golden hour, daylight).
 - Added overlay fade-in transitions and updated sizing behavior for current Google Calendar tray/layout rendering.
 
+Release Highlights (v1.2.1)
+---------------------------
+
+- Replaced fixed overlay height scaling with runtime measurement of rendered day-grid height.
+- Improved overlay vertical positioning accuracy across Google Calendar appearance modes.
+
+Release Highlights (v1.2.2)
+---------------------------
+
+- Improved popup geolocation reliability when requesting location from the active Calendar tab.
+- Simplified popup/content-script coordination while keeping settings sync via `chrome.storage.sync`.
+
 Release Notes (v1.2.0)
 -----------------------
 
-See [RELEASE_NOTES_1.2.0.md](RELEASE_NOTES_1.2.0.md) for the full summary.
+See [release-notes/RELEASE_NOTES_1.2.0.md](release-notes/RELEASE_NOTES_1.2.0.md) for the full summary.
 
 ### Added
 
@@ -47,6 +59,37 @@ See [RELEASE_NOTES_1.2.0.md](RELEASE_NOTES_1.2.0.md) for the full summary.
 
 - Better visual behavior with updated Google Calendar column/tray sizing.
 - Reduced noisy logging in production paths.
+
+Release Notes (v1.2.1)
+-----------------------
+
+See [release-notes/RELEASE_NOTES_1.2.1.md](release-notes/RELEASE_NOTES_1.2.1.md) for the full summary.
+
+### Changed
+
+- Replaced fixed `maxPixels = 960` overlay scaling assumption with dynamic calendar grid-height measurement.
+- Updated time-to-pixel conversion/render path to use measured height during placement.
+
+### Fixed
+
+- Overlay placement now adapts correctly in both Google Calendar appearance modes:
+	- Compact
+	- Responsive to your screen
+
+Release Notes (v1.2.2)
+-----------------------
+
+See [release-notes/RELEASE_NOTES_1.2.2.md](release-notes/RELEASE_NOTES_1.2.2.md) for the full summary.
+
+### Changed
+
+- Simplified popup/content runtime messaging so it is used only where needed for live geolocation requests.
+- Kept color and location updates synchronized via `chrome.storage.sync`.
+
+### Fixed
+
+- Restored reliable popup geolocation retrieval flow on active Google Calendar tabs.
+- Resolved messaging-refactor regressions that could prevent location acquisition.
 
 How It Works
 ------------
@@ -121,11 +164,13 @@ Deployment (Chrome Web Store)
 
 2. Create a clean upload zip from the repository root.
 
+	Important: include the current `release-notes/RELEASE_NOTES_<version>.md` file so the popup About panel can load notes for the manifest version.
+
 ```bash
 zip -r -X webstore-upload-clean-stripped.zip \
   manifest.json background.js daylight.css daylight.js geolocation-128.png \
-  icon.png icon16.png icon48.png icon128.png jquery.min.js LICENSE \
-  popup.css popup.html popup.js popupbg.jpg README.md suncalc
+	icon.png icon16.png icon48.png icon128.png jquery.min.js LICENSE \
+	popup.css popup.html popup.js popupbg.jpg README.md release-notes/RELEASE_NOTES_1.2.2.md suncalc
 ```
 
 3. Validate the archive before upload.
